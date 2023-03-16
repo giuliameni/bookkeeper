@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.bookkeeper.meta;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.proto.BookkeeperInternalCallbacks.GenericCallback;
 import org.apache.bookkeeper.util.ZkUtils;
@@ -72,8 +73,7 @@ public class ZkLedgerIdGenerator implements LedgerIdGenerator {
         generateLedgerIdImpl(cb, zk, ledgerPrefix, zkAcls);
     }
 
-    public static void generateLedgerIdImpl(final GenericCallback<Long> cb, ZooKeeper zk, String ledgerPrefix,
-            List<ACL> zkAcls) {
+    public static void generateLedgerIdImpl(final GenericCallback<Long> cb, ZooKeeper zk, String ledgerPrefix, List<ACL> zkAcls) {
         ZkUtils.asyncCreateFullPathOptimistic(zk, ledgerPrefix, new byte[0], zkAcls,
                 CreateMode.EPHEMERAL_SEQUENTIAL,
                 new StringCallback() {
@@ -92,9 +92,10 @@ public class ZkLedgerIdGenerator implements LedgerIdGenerator {
                         long ledgerId;
                         try {
                             ledgerId = getLedgerIdFromGenPath(idPathName, ledgerPrefix);
-                            if (ledgerId < 0 || ledgerId >= Integer.MAX_VALUE) {
+                            if(ledgerId < 0 || ledgerId >= Integer.MAX_VALUE) {
                                 cb.operationComplete(BKException.Code.LedgerIdOverflowException, null);
-                            } else {
+                            }
+                            else {
                                 cb.operationComplete(BKException.Code.OK, ledgerId);
                             }
                         } catch (IOException e) {
@@ -125,7 +126,7 @@ public class ZkLedgerIdGenerator implements LedgerIdGenerator {
     private static long getLedgerIdFromGenPath(String nodeName, String ledgerPrefix) throws IOException {
         long ledgerId;
         try {
-            String[] parts = nodeName.split(ledgerPrefix);
+            String parts[] = nodeName.split(ledgerPrefix);
             ledgerId = Long.parseLong(parts[parts.length - 1]);
         } catch (NumberFormatException e) {
             throw new IOException(e);

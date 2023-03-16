@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,7 +62,7 @@ public class MetastoreTableItem {
     /**
      * Set the value of the item.
      *
-     * @param value of the item.
+     * @return value of the item.
      */
     public void setValue(Versioned<Value> value) {
         this.value = value;

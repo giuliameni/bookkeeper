@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.bookkeeper.meta;
 
-/**
- * LongHierarchical Ledger Manager Factory.
- */
 public class LongHierarchicalLedgerManagerFactory extends HierarchicalLedgerManagerFactory {
 
     public static final String NAME = "longhierarchical";

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +17,24 @@
  */
 package org.apache.bookkeeper.metastore;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.bookkeeper.metastore.MetastoreTable.ALL_FIELDS;
-
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.primitives.UnsignedBytes;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import java.nio.charset.Charset;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
-/**
- * A metastore value.
- */
+import static com.google.common.base.Charsets.UTF_8;
+
+import static org.apache.bookkeeper.metastore.MetastoreTable.ALL_FIELDS;
+
 public class Value {
-    private static final Comparator<byte[]> comparator =
+    static final Comparator<byte[]> comparator =
         UnsignedBytes.lexicographicalComparator();
 
     protected Map<String, byte[]> fields;
@@ -91,7 +90,7 @@ public class Value {
 
     @Override
     public int hashCode() {
-        HashFunction hf = Hashing.murmur3_32_fixed();
+        HashFunction hf = Hashing.murmur3_32();
         Hasher hc = hf.newHasher();
         for (String key : fields.keySet()) {
             hc.putString(key, Charset.defaultCharset());
@@ -108,7 +107,7 @@ public class Value {
         if (fields.size() != other.fields.size()) {
             return false;
         }
-        for (Map.Entry<String, byte[]> entry : fields.entrySet()) {
+        for (Map.Entry<String,byte[]> entry : fields.entrySet()) {
             String f = entry.getKey();
             byte[] v1 = entry.getValue();
             byte[] v2 = other.fields.get(f);

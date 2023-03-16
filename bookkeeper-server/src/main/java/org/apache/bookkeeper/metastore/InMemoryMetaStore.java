@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,11 +19,9 @@ package org.apache.bookkeeper.metastore;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.commons.configuration.Configuration;
 
-/**
- * An in-memory implementation of the MetaStore interface.
- */
 public class InMemoryMetaStore implements MetaStore {
 
     static final int CUR_VERSION = 1;

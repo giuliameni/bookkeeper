@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.bookkeeper.net;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -27,10 +24,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * Network Utilities.
- */
+import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class NetUtils {
+    private static final Logger logger = LoggerFactory.getLogger(NetUtils.class);
 
     /**
      * Given a string representation of a host, return its ip address
@@ -64,26 +63,20 @@ public class NetUtils {
         return hostNames;
     }
 
-    public static String resolveNetworkLocation(DNSToSwitchMapping dnsResolver,
-                                                BookieSocketAddress addr) {
+    public static String resolveNetworkLocation(DNSToSwitchMapping dnsResolver, InetSocketAddress addr) {
         List<String> names = new ArrayList<String>(1);
 
-        InetSocketAddress inetSocketAddress = addr.getSocketAddress();
         if (dnsResolver.useHostName()) {
             names.add(addr.getHostName());
-        } else {
-            InetAddress inetAddress = inetSocketAddress.getAddress();
-            if (null == inetAddress) {
-                names.add(addr.getHostName());
-            } else {
-                names.add(inetAddress.getHostAddress());
-            }
+        }
+        else {
+            names.add(addr.getAddress().getHostAddress());
         }
 
         // resolve network addresses
         List<String> rNames = dnsResolver.resolve(names);
-        checkNotNull(rNames, "DNS Resolver should not return null response.");
-        checkState(rNames.size() == 1, "Expected exactly one element");
+        Preconditions.checkNotNull(rNames, "DNS Resolver should not return null response.");
+        Preconditions.checkState(rNames.size() == 1, "Expected exactly one element");
 
         return rNames.get(0);
     }

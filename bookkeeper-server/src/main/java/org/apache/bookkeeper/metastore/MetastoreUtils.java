@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.bookkeeper.metastore.MSException.Code;
 import org.apache.bookkeeper.versioning.Version;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MetastoreUtils {
 
-    private static final Logger logger = LoggerFactory.getLogger(MetastoreUtils.class);
+    protected final static Logger logger = LoggerFactory.getLogger(MetastoreUtils.class);
 
     static class MultiMetastoreCallback<T> implements MetastoreCallback<T> {
 

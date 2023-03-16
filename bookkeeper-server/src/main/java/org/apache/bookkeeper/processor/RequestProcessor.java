@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,17 +20,16 @@
  */
 package org.apache.bookkeeper.processor;
 
-import org.apache.bookkeeper.proto.BookieRequestHandler;
+import io.netty.channel.Channel;
 
 /**
  * A request processor that is used for processing requests at bookie side.
  */
-public interface RequestProcessor extends AutoCloseable {
+public interface RequestProcessor {
 
     /**
      * Close the request processor.
      */
-    @Override
     void close();
 
     /**
@@ -41,10 +40,6 @@ public interface RequestProcessor extends AutoCloseable {
      * @param channel
      *          channel received the given request <i>r</i>
      */
-    void processRequest(Object r, BookieRequestHandler channel);
+    void processRequest(Object r, Channel channel);
 
-    /**
-     * Flush any pending response staged on all the client connections.
-     */
-    void flushPendingResponses();
 }
