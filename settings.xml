@@ -156,6 +156,13 @@ under the License.
       <name>Human Readable Name for this Mirror.</name>
       <url>http://my.repository.com/repo/path</url>
     </mirror>
+
+    <mirror>
+      <id>twitter</id>
+      <mirrorOf>twitter</mirrorOf>
+      <url>https://maven.twttr.com/</url>
+      <blocked>false</blocked>
+    </mirror>
      -->
   
    
