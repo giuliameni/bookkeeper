@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.apache.bookkeeper</groupId>
     <artifactId>bookkeeper</artifactId>
-    <version>4.16.0-SNAPSHOT</version>
+    <version>4.6.0</version>
   </parent>
   <artifactId>bookkeeper-common</artifactId>
   <name>Apache BookKeeper :: Common</name>
@@ -31,85 +31,38 @@
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.bookkeeper</groupId>
-      <artifactId>cpu-affinity</artifactId>
-      <version>${project.parent.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jctools</groupId>
-      <artifactId>jctools-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.netty.incubator</groupId>
-      <artifactId>netty-incubator-transport-native-io_uring</artifactId>
-      <classifier>linux-x86_64</classifier>
-    </dependency>
-    <dependency>
-      <groupId>io.netty.incubator</groupId>
-      <artifactId>netty-incubator-transport-native-io_uring</artifactId>
-      <classifier>linux-aarch_64</classifier>
+      <version>${guava.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
+      <version>${google.code.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.google.errorprone</groupId>
       <artifactId>error_prone_annotations</artifactId>
+      <version>${google.errorprone.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <!-- import for rxjava3 in maven -->
-    <dependency>
-      <groupId>io.reactivex.rxjava3</groupId>
-      <artifactId>rxjava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.bookkeeper</groupId>
-      <artifactId>testtools</artifactId>
-      <version>${project.parent.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.awaitility</groupId>
-      <artifactId>awaitility</artifactId>
+      <version>${commons-lang3.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
     <plugins>
       <plugin>
-        <groupId>com.github.spotbugs</groupId>
-        <artifactId>spotbugs-maven-plugin</artifactId>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -126,28 +79,38 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin.version}</version>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${maven-checkstyle-plugin.version}</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>${puppycrawl.checkstyle.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.bookkeeper</groupId>
+            <artifactId>buildtools</artifactId>
+            <version>${project.parent.version}</version>
+          </dependency>
+        </dependencies>
         <configuration>
-          <sourcepath>${src.dir}</sourcepath>
-          <!-- Avoid for missing javadoc comments to be marked as errors -->
-          <doclint>none</doclint>
-          <subpackages>org.apache.bookkeeper.common.annotation</subpackages>
-          <groups>
-            <group>
-              <title>Bookkeeper Client</title>
-              <packages>org.apache.bookkeeper.common.annotation*</packages>
-            </group>
-          </groups>
+          <configLocation>bookkeeper/checkstyle.xml</configLocation>
+          <suppressionsLocation>bookkeeper/suppressions.xml</suppressionsLocation>
+          <consoleOutput>true</consoleOutput>
+          <failOnViolation>true</failOnViolation>
+          <includeResources>false</includeResources>
+          <includeTestSourceDirectory>true</includeTestSourceDirectory>
         </configuration>
         <executions>
           <execution>
-            <id>attach-javadocs</id>
+            <id>checkstyle</id>
+            <phase>validate</phase>
             <goals>
-              <goal>jar</goal>
+              <goal>check</goal>
             </goals>
           </execution>
         </executions>
