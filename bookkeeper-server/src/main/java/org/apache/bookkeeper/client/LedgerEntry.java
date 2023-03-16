@@ -20,8 +20,7 @@
  */
 package org.apache.bookkeeper.client;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import java.io.InputStream;
@@ -63,12 +62,12 @@ public class LedgerEntry {
      * Returns the content of the entry.
      * This method can be called only once. While using v2 wire protocol this method will automatically release
      * the internal ByteBuf
-     *
+     * 
      * @return the content of the entry
      * @throws IllegalStateException if this method is called twice
      */
     public byte[] getEntry() {
-        checkState(null != data, "entry content can be accessed only once");
+        Preconditions.checkState(null != data, "entry content can be accessed only once");
         byte[] entry = new byte[data.readableBytes()];
         data.readBytes(entry);
         data.release();
@@ -86,7 +85,7 @@ public class LedgerEntry {
      * @throws IllegalStateException if this method is called twice
      */
     public InputStream getEntryInputStream() {
-        checkState(null != data, "entry content can be accessed only once");
+        Preconditions.checkState(null != data, "entry content can be accessed only once");
         ByteBufInputStream res = new ByteBufInputStream(data);
         data = null;
         return res;
@@ -95,7 +94,7 @@ public class LedgerEntry {
     /**
      * Return the internal buffer that contains the entry payload.
      *
-     * <p>Note: Using v2 wire protocol it is responsibility of the caller to ensure to release the buffer after usage.
+     * Note: Using v2 wire protocol it is responsibility of the caller to ensure to release the buffer after usage.
      *
      * @return a ByteBuf which contains the data
      *
@@ -104,7 +103,8 @@ public class LedgerEntry {
      * or {@link #getEntryInputStream()}.
      */
     public ByteBuf getEntryBuffer() {
-        checkState(null != data, "entry content has been retrieved by #getEntry or #getEntryInputStream");
+        Preconditions.checkState(null != data, "entry content has been retrieved" +
+            " by #getEntry or #getEntryInputStream");
         return data;
     }
 }

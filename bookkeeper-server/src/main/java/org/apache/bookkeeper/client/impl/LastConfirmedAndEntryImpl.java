@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -41,15 +41,11 @@ public class LastConfirmedAndEntryImpl implements LastConfirmedAndEntry {
     public static LastConfirmedAndEntryImpl create(long lac, org.apache.bookkeeper.client.LedgerEntry entry) {
         LastConfirmedAndEntryImpl entryImpl = RECYCLER.get();
         entryImpl.lac = lac;
-        if (null == entry) {
-            entryImpl.entry = null;
-        } else {
-            entryImpl.entry = LedgerEntryImpl.create(
-                entry.getLedgerId(),
-                entry.getEntryId(),
-                entry.getLength(),
-                entry.getEntryBuffer());
-        }
+        entryImpl.entry = LedgerEntryImpl.create(
+            entry.getLedgerId(),
+            entry.getEntryId(),
+            entry.getLength(),
+            entry.getEntryBuffer());
         return entryImpl;
     }
 

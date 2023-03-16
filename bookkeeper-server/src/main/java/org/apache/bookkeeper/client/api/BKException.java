@@ -15,8 +15,6 @@
  */
 package org.apache.bookkeeper.client.api;
 
-import java.lang.reflect.Field;
-import java.util.function.Function;
 import org.apache.bookkeeper.client.LedgerHandleAdv;
 import org.apache.bookkeeper.common.annotation.InterfaceAudience.Public;
 import org.apache.bookkeeper.common.annotation.InterfaceStability.Unstable;
@@ -28,23 +26,8 @@ import org.apache.bookkeeper.common.annotation.InterfaceStability.Unstable;
  */
 @Public
 @Unstable
-public class BKException extends Exception {
-    static final Function<Throwable, BKException> HANDLER = cause -> {
-        if (cause == null) {
-            return null;
-        }
-        if (cause instanceof BKException) {
-            return (BKException) cause;
-        } else {
-            BKException ex = new BKException(Code.UnexpectedConditionException);
-            ex.initCause(cause);
-            return ex;
-        }
-    };
-
+public abstract class BKException extends Exception {
     protected final int code;
-
-    private static final LogMessagePool logMessagePool = new LogMessagePool();
 
     /**
      * Create a new exception.
@@ -55,17 +38,6 @@ public class BKException extends Exception {
      */
     public BKException(int code) {
         super(getMessage(code));
-        this.code = code;
-    }
-
-    /**
-     * Create a new exception with the <tt>cause</tt>.
-     *
-     * @param code exception code
-     * @param cause the exception cause
-     */
-    public BKException(int code, Throwable cause) {
-        super(getMessage(code), cause);
         this.code = code;
     }
 
@@ -81,20 +53,9 @@ public class BKException extends Exception {
     }
 
     /**
-     * Returns a lazy error code formatter suitable to pass to log functions.
-     *
-     * @param code the error code value
-     *
-     * @return lazy error code log formatter
-     */
-    public static Object codeLogger(int code) {
-        return logMessagePool.get(code);
-    }
-
-    /**
      * Describe an error code.
      *
-     * @param code the error code value
+     * @param code
      *
      * @return the description of the error code
      */
@@ -107,7 +68,7 @@ public class BKException extends Exception {
         case Code.QuorumException:
             return "Invalid quorum size on ensemble size";
         case Code.NoBookieAvailableException:
-            return "No bookie available";
+            return "Invalid quorum size on ensemble size";
         case Code.DigestNotInitializedException:
             return "Digest engine not initialized";
         case Code.DigestMatchException:
@@ -115,9 +76,7 @@ public class BKException extends Exception {
         case Code.NotEnoughBookiesException:
             return "Not enough non-faulty bookies available";
         case Code.NoSuchLedgerExistsException:
-            return "No such ledger exists on Bookies";
-        case Code.NoSuchLedgerExistsOnMetadataServerException:
-            return "No such ledger exists on Metadata Server";
+            return "No such ledger exists";
         case Code.BookieHandleNotAvailableException:
             return "Bookie handle is not available";
         case Code.ZKException:
@@ -152,8 +111,6 @@ public class BKException extends Exception {
             return "Attempting to use an unclosed fragment; This is not safe";
         case Code.WriteOnReadOnlyBookieException:
             return "Attempting to write on ReadOnly bookie";
-        case Code.TooManyRequestsException:
-            return "Too many requests to the same Bookie";
         case Code.LedgerIdOverflowException:
             return "Next ledgerID is too large.";
         case Code.ReplicationException:
@@ -168,17 +125,13 @@ public class BKException extends Exception {
             return "Bookie operation timeout";
         case Code.SecurityException:
             return "Failed to establish a secure connection";
-        case Code.MetadataSerializationException:
-            return "Failed to serialize metadata";
-        case Code.DataUnknownException:
-            return "Ledger in limbo";
         default:
             return "Unexpected condition";
         }
     }
 
     /**
-     * Codes which represent the various exception types.
+     * Codes which represent the various exceptoin types.
      */
     public interface Code {
         /** A placer holder (unused). */
@@ -245,9 +198,6 @@ public class BKException extends Exception {
         int TimeoutException = -23;
         int SecurityException = -24;
 
-        /** No such ledger exists one metadata server. */
-        int NoSuchLedgerExistsOnMetadataServerException = -25;
-
         /**
          * Operation is illegal.
          */
@@ -280,18 +230,6 @@ public class BKException extends Exception {
         int LedgerIdOverflowException = -106;
 
         /**
-         * Failure to serialize metadata.
-         *
-         * @since 4.9
-         */
-        int MetadataSerializationException = -107;
-
-        /**
-         * Operations failed due to ledger data in an unknown state.
-         */
-        int DataUnknownException = -108;
-
-        /**
          * Generic exception code used to propagate in replication pipeline.
          */
         int ReplicationException = -200;
@@ -302,78 +240,4 @@ public class BKException extends Exception {
         int UnexpectedConditionException = -999;
     }
 
-    /**
-     * Code log message pool.
-     */
-    private static class LogMessagePool {
-        private final int minCode;
-        private final String[] pool;
-
-        private LogMessagePool() {
-            Field[] fields = Code.class.getDeclaredFields();
-            this.minCode = minCode(fields);
-            this.pool = new String[-minCode + 2]; // UnexpectedConditionException is an outlier
-            initPoolMessages(fields);
-        }
-
-        private int minCode(Field[] fields) {
-            int min = 0;
-            for (Field field : fields) {
-                int code = getFieldInt(field);
-                if (code < min && code > Code.UnexpectedConditionException) {
-                    min = code;
-                }
-            }
-            return min;
-        }
-
-        private void initPoolMessages(Field[] fields) {
-            for (Field field : fields) {
-                int code = getFieldInt(field);
-                int index = poolIndex(code);
-                if (index >= 0) {
-                    pool[index] = String.format("%s: %s", field.getName(), getMessage(code));
-                }
-            }
-        }
-
-        private static int getFieldInt(Field field) {
-            try {
-                return field.getInt(null);
-            } catch (IllegalAccessException e) {
-                return -1;
-            }
-        }
-
-        private Object get(int code) {
-            int index = poolIndex(code);
-            String logMessage = index >= 0 ? pool[index] : null;
-            return logMessage != null ? logMessage : new UnrecognizedCodeLogFormatter(code);
-        }
-
-        private int poolIndex(int code) {
-            switch (code) {
-            case Code.UnexpectedConditionException:
-                return -minCode + 1;
-            default:
-                return code <= 0 && code >= minCode ? -minCode + code : -1;
-            }
-        }
-
-        /**
-         * Unrecognized code lazy log message formatter.
-         */
-        private static class UnrecognizedCodeLogFormatter {
-            private final int code;
-
-            private UnrecognizedCodeLogFormatter(int code) {
-                this.code = code;
-            }
-
-            @Override
-            public String toString() {
-                return String.format("%d: %s", code, getMessage(code));
-            }
-        }
-    }
 }

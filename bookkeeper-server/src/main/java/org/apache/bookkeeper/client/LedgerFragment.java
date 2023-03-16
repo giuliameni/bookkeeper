@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,29 +19,29 @@
  */
 package org.apache.bookkeeper.client;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
-import org.apache.bookkeeper.net.BookieId;
+import org.apache.bookkeeper.net.BookieSocketAddress;
 
 /**
  * Represents the entries of a segment of a ledger which are stored on subset of
  * bookies in the segments bookie ensemble.
  *
- * <p>Used for checking and recovery
+ * Used for checking and recovery
  */
 public class LedgerFragment {
     private final Set<Integer> bookieIndexes;
-    private final List<BookieId> ensemble;
+    private final List<BookieSocketAddress> ensemble;
     private final long firstEntryId;
     private final long lastKnownEntryId;
     private final long ledgerId;
     private final DistributionSchedule schedule;
     private final boolean isLedgerClosed;
-    private ReplicateType replicateType = ReplicateType.DATA_LOSS;
 
-    public LedgerFragment(LedgerHandle lh,
+    LedgerFragment(LedgerHandle lh,
                    long firstEntryId,
                    long lastKnownEntryId,
                    Set<Integer> bookieIndexes) {
@@ -49,15 +49,15 @@ public class LedgerFragment {
         this.firstEntryId = firstEntryId;
         this.lastKnownEntryId = lastKnownEntryId;
         this.bookieIndexes = bookieIndexes;
-        this.ensemble = lh.getLedgerMetadata().getEnsembleAt(firstEntryId);
+        this.ensemble = lh.getLedgerMetadata().getEnsemble(firstEntryId);
         this.schedule = lh.getDistributionSchedule();
-        SortedMap<Long, ? extends List<BookieId>> ensembles = lh
-                .getLedgerMetadata().getAllEnsembles();
+        SortedMap<Long, ArrayList<BookieSocketAddress>> ensembles = lh
+                .getLedgerMetadata().getEnsembles();
         this.isLedgerClosed = lh.getLedgerMetadata().isClosed()
                 || !ensemble.equals(ensembles.get(ensembles.lastKey()));
     }
 
-    public LedgerFragment(LedgerFragment lf, Set<Integer> subset) {
+    LedgerFragment(LedgerFragment lf, Set<Integer> subset) {
         this.ledgerId = lf.ledgerId;
         this.firstEntryId = lf.firstEntryId;
         this.lastKnownEntryId = lf.lastKnownEntryId;
@@ -92,27 +92,27 @@ public class LedgerFragment {
         return isLedgerClosed;
     }
 
-    public long getLedgerId() {
+    long getLedgerId() {
         return ledgerId;
     }
 
-    public long getFirstEntryId() {
+    long getFirstEntryId() {
         return firstEntryId;
     }
 
-    public long getLastKnownEntryId() {
+    long getLastKnownEntryId() {
         return lastKnownEntryId;
     }
 
     /**
-     * Gets the failedBookie address.
+     * Gets the failedBookie address
      */
-    public BookieId getAddress(int bookieIndex) {
+    public BookieSocketAddress getAddress(int bookieIndex) {
         return ensemble.get(bookieIndex);
     }
 
-    public Set<BookieId> getAddresses() {
-        Set<BookieId> addresses = new HashSet<BookieId>();
+    public Set<BookieSocketAddress> getAddresses() {
+        Set<BookieSocketAddress> addresses = new HashSet<BookieSocketAddress>();
         for (int bookieIndex : bookieIndexes) {
             addresses.add(ensemble.get(bookieIndex));
         }
@@ -120,7 +120,7 @@ public class LedgerFragment {
     }
 
     /**
-     * Gets the failedBookie index.
+     * Gets the failedBookie index
      */
     public Set<Integer> getBookiesIndexes() {
         return bookieIndexes;
@@ -132,18 +132,16 @@ public class LedgerFragment {
      * @return entryId
      */
     public long getFirstStoredEntryId() {
-        long firstEntry = LedgerHandle.INVALID_ENTRY_ID;
+        Long firstEntry = null;
         for (int bookieIndex : bookieIndexes) {
             Long firstStoredEntryForBookie = getFirstStoredEntryId(bookieIndex);
-            if (firstStoredEntryForBookie != LedgerHandle.INVALID_ENTRY_ID) {
-                if (firstEntry == LedgerHandle.INVALID_ENTRY_ID) {
-                    firstEntry = firstStoredEntryForBookie;
-                } else {
-                    firstEntry = Math.min(firstEntry, firstStoredEntryForBookie);
-                }
+            if (null == firstEntry) {
+                firstEntry = firstStoredEntryForBookie;
+            } else if (null != firstStoredEntryForBookie) {
+                firstEntry = Math.min(firstEntry, firstStoredEntryForBookie);
             }
         }
-        return firstEntry;
+        return null == firstEntry ? LedgerHandle.INVALID_ENTRY_ID : firstEntry;
     }
 
     /**
@@ -172,18 +170,16 @@ public class LedgerFragment {
      * @return entryId
      */
     public long getLastStoredEntryId() {
-        long lastEntry = LedgerHandle.INVALID_ENTRY_ID;
+        Long lastEntry = null;
         for (int bookieIndex : bookieIndexes) {
             Long lastStoredEntryIdForBookie = getLastStoredEntryId(bookieIndex);
-            if (lastStoredEntryIdForBookie != LedgerHandle.INVALID_ENTRY_ID) {
-                if (lastEntry == LedgerHandle.INVALID_ENTRY_ID) {
-                    lastEntry = lastStoredEntryIdForBookie;
-                } else {
-                    lastEntry = Math.max(lastEntry, lastStoredEntryIdForBookie);
-                }
+            if (null == lastEntry) {
+                lastEntry = lastStoredEntryIdForBookie;
+            } else if (null != lastStoredEntryIdForBookie) {
+                lastEntry = Math.max(lastEntry, lastStoredEntryIdForBookie);
             }
         }
-        return lastEntry;
+        return null == lastEntry ? LedgerHandle.INVALID_ENTRY_ID : lastEntry;
     }
 
     /**
@@ -205,25 +201,13 @@ public class LedgerFragment {
         return LedgerHandle.INVALID_ENTRY_ID;
     }
 
-    public boolean isStoredEntryId(long entryId, int bookieIndex) {
-        return schedule.hasEntry(entryId, bookieIndex);
-    }
-
     /**
-     * Gets the ensemble of fragment.
+     * Gets the ensemble of fragment
      *
      * @return the ensemble for the segment which this fragment is a part of
      */
-    public List<BookieId> getEnsemble() {
+    public List<BookieSocketAddress> getEnsemble() {
         return this.ensemble;
-    }
-
-    public ReplicateType getReplicateType() {
-        return replicateType;
-    }
-
-    public void setReplicateType(ReplicateType replicateType) {
-        this.replicateType = replicateType;
     }
 
     @Override
@@ -232,13 +216,5 @@ public class LedgerFragment {
                 + "LastKnownEntryID: %d[%d], Host: %s, Closed: %s)", ledgerId, firstEntryId,
                 getFirstStoredEntryId(), lastKnownEntryId, getLastStoredEntryId(),
                 getAddresses(), isLedgerClosed);
-    }
-
-    /**
-     * ReplicateType.
-     */
-    public enum ReplicateType {
-        DATA_LOSS,
-        DATA_NOT_ADHERING_PLACEMENT
     }
 }
