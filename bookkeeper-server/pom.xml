@@ -329,7 +329,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.10.0</version>
+        <version>2.10.4</version>
         <configuration>
           <!-- Avoid for missing javadoc comments to be marked as errors -->
           <additionalparam>-Xdoclint:none</additionalparam>
