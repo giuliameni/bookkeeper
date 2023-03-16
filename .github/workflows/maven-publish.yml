@@ -28,7 +28,7 @@ jobs:
 
     - name: Build with Mave
       run: |
-        cd bookkeeper-common
+        cd bookkeeper-server
         mvn clean verify -DskipTests -Dcheckstyle.skip
 
 
