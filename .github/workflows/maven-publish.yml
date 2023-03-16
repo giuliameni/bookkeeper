@@ -31,6 +31,15 @@ jobs:
       run: |
         mkdir -p ~/.m2
         echo 'ciao' > ~/.m2/settings.xml
+        
+        
+        
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Read settings.xml
+      run: |
+       cat ~/.m2/settings.xml
 
 
 
