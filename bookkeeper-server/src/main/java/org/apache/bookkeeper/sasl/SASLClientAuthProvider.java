@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -33,9 +33,6 @@ import org.apache.bookkeeper.client.BKException;
 import org.apache.bookkeeper.proto.ClientConnectionPeer;
 import org.slf4j.LoggerFactory;
 
-/**
- * SASL Client Authentication Provider.
- */
 public class SASLClientAuthProvider implements ClientAuthProvider {
 
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SASLClientAuthProvider.class);

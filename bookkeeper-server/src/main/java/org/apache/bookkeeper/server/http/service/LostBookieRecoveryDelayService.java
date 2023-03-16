@@ -18,23 +18,22 @@
  */
 package org.apache.bookkeeper.server.http.service;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import org.apache.bookkeeper.client.BookKeeperAdmin;
-import org.apache.bookkeeper.common.util.JsonUtil;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.http.HttpServer;
 import org.apache.bookkeeper.http.service.HttpEndpointService;
 import org.apache.bookkeeper.http.service.HttpServiceRequest;
 import org.apache.bookkeeper.http.service.HttpServiceResponse;
+import org.apache.bookkeeper.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * HttpEndpointService that handle Bookkeeper lost bookie recovery delay parameter related http request.
  *
- * <p>The GET method will get the value of parameter lostBookieRecoveryDelay,
+ * The GET method will get the value of parameter lostBookieRecoveryDelay,
  * while the PUT method will set the value of parameter lostBookieRecoveryDelay,
  */
 public class LostBookieRecoveryDelayService implements HttpEndpointService {
@@ -45,7 +44,7 @@ public class LostBookieRecoveryDelayService implements HttpEndpointService {
     protected BookKeeperAdmin bka;
 
     public LostBookieRecoveryDelayService(ServerConfiguration conf, BookKeeperAdmin bka) {
-        checkNotNull(conf);
+        Preconditions.checkNotNull(conf);
         this.conf = conf;
         this.bka = bka;
     }
@@ -85,9 +84,7 @@ public class LostBookieRecoveryDelayService implements HttpEndpointService {
                 int delaySeconds = bka.getLostBookieRecoveryDelay();
                 response.setCode(HttpServer.StatusCode.OK);
                 response.setBody("lostBookieRecoveryDelay value: " + delaySeconds);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("response body:" + response.getBody());
-                }
+                LOG.debug("response body:" + response.getBody());
                 return response;
             } catch (Exception e) {
                 // may get noNode exception

@@ -18,8 +18,7 @@
  */
 package org.apache.bookkeeper.server.http.service;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -28,13 +27,13 @@ import java.util.Map;
 import org.apache.bookkeeper.bookie.Journal;
 import org.apache.bookkeeper.bookie.LedgerDirsManager;
 import org.apache.bookkeeper.bookie.LogMark;
-import org.apache.bookkeeper.common.util.JsonUtil;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.http.HttpServer;
 import org.apache.bookkeeper.http.service.HttpEndpointService;
 import org.apache.bookkeeper.http.service.HttpServiceRequest;
 import org.apache.bookkeeper.http.service.HttpServiceResponse;
 import org.apache.bookkeeper.util.DiskChecker;
+import org.apache.bookkeeper.util.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +41,9 @@ import org.slf4j.LoggerFactory;
  * HttpEndpointService that handle Bookkeeper get last log mark related http request.
  * The GET method will get the last log position of each journal.
  *
- * <p>output would be like this:
+ * output would be like this:
  *  {
- *    "&lt;Journal_id&gt;" : "&lt;Pos&gt;",
+ *    "<Journal_id>" : "<Pos>",
  *    ...
  *  }
  */
@@ -55,7 +54,7 @@ public class GetLastLogMarkService implements HttpEndpointService {
     protected ServerConfiguration conf;
 
     public GetLastLogMarkService(ServerConfiguration conf) {
-        checkNotNull(conf);
+        Preconditions.checkNotNull(conf);
         this.conf = conf;
     }
 
@@ -68,38 +67,33 @@ public class GetLastLogMarkService implements HttpEndpointService {
                 /**
                  * output:
                  *  {
-                 *    "&lt;Journal_id&gt;" : "&lt;Pos&gt;",
+                 *    "<Journal_id>" : "<Pos>",
                  *    ...
                  *  }
                  */
                 Map<String, String> output = Maps.newHashMap();
 
                 List<Journal> journals = Lists.newArrayListWithCapacity(conf.getJournalDirs().length);
-                int idx = 0;
                 for (File journalDir : conf.getJournalDirs()) {
-                    journals.add(new Journal(idx++, journalDir, conf, new LedgerDirsManager(conf, conf.getLedgerDirs(),
+                    journals.add(new Journal(journalDir, conf, new LedgerDirsManager(conf, conf.getLedgerDirs(),
                       new DiskChecker(conf.getDiskUsageThreshold(), conf.getDiskUsageWarnThreshold()))));
                 }
                 for (Journal journal : journals) {
                     LogMark lastLogMark = journal.getLastLogMark().getCurMark();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("LastLogMark: Journal Id - " + lastLogMark.getLogFileId() + "("
-                                + Long.toHexString(lastLogMark.getLogFileId()) + ".txn), Pos - "
-                                + lastLogMark.getLogFileOffset());
-                    }
+                    LOG.debug("LastLogMark: Journal Id - " + lastLogMark.getLogFileId() + "("
+                      + Long.toHexString(lastLogMark.getLogFileId()) + ".txn), Pos - "
+                      + lastLogMark.getLogFileOffset());
                     output.put("LastLogMark: Journal Id - " + lastLogMark.getLogFileId()
                         + "(" + Long.toHexString(lastLogMark.getLogFileId()) + ".txn)",
                         "Pos - " + lastLogMark.getLogFileOffset());
                 }
 
                 String jsonResponse = JsonUtil.toJson(output);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("output body:" + jsonResponse);
-                }
+                LOG.debug("output body:" + jsonResponse);
                 response.setBody(jsonResponse);
                 response.setCode(HttpServer.StatusCode.OK);
                 return response;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOG.error("Exception occurred while getting last log mark", e);
                 response.setCode(HttpServer.StatusCode.NOT_FOUND);
                 response.setBody("ERROR handling request: " + e.getMessage());

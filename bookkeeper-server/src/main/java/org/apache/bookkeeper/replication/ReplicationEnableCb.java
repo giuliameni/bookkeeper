@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,12 +21,13 @@
 package org.apache.bookkeeper.replication;
 
 import java.util.concurrent.CountDownLatch;
+
 import org.apache.bookkeeper.proto.BookkeeperInternalCallbacks.GenericCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Callback which is getting notified when the replication process is enabled.
+ * Callback which is getting notified when the replication process is enabled
  */
 public class ReplicationEnableCb implements GenericCallback<Void> {
 
@@ -44,7 +45,7 @@ public class ReplicationEnableCb implements GenericCallback<Void> {
 
     /**
      * This is a blocking call and causes the current thread to wait until the
-     * replication process is enabled.
+     * replication process is enabled
      *
      * @throws InterruptedException
      *             interrupted while waiting

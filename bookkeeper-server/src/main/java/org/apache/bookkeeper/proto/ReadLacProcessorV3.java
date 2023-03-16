@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,13 +20,10 @@
  */
 package org.apache.bookkeeper.proto;
 
-import com.google.protobuf.ByteString;
-import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.bookkeeper.bookie.Bookie;
-import org.apache.bookkeeper.bookie.BookieException;
 import org.apache.bookkeeper.proto.BookkeeperProtocol.ReadLacRequest;
 import org.apache.bookkeeper.proto.BookkeeperProtocol.ReadLacResponse;
 import org.apache.bookkeeper.proto.BookkeeperProtocol.Request;
@@ -36,15 +33,18 @@ import org.apache.bookkeeper.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * A read processor for v3 last add confirmed messages.
- */
-class ReadLacProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(ReadLacProcessorV3.class);
+import com.google.protobuf.ByteString;
 
-    public ReadLacProcessorV3(Request request, BookieRequestHandler requestHandler,
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.Channel;
+import io.netty.util.ReferenceCountUtil;
+
+class ReadLacProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
+    private final static Logger logger = LoggerFactory.getLogger(ReadLacProcessorV3.class);
+
+    public ReadLacProcessorV3(Request request, Channel channel,
                              BookieRequestProcessor requestProcessor) {
-        super(request, requestHandler, requestProcessor);
+        super(request, channel, requestProcessor);
     }
 
     // Returns null if there is no exception thrown
@@ -65,51 +65,31 @@ class ReadLacProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
         ByteBuf lastEntry = null;
         ByteBuf lac = null;
         try {
+            lastEntry = requestProcessor.bookie.readEntry(ledgerId, BookieProtocol.LAST_ADD_CONFIRMED);
             lac = requestProcessor.bookie.getExplicitLac(ledgerId);
             if (lac != null) {
                 readLacResponse.setLacBody(ByteString.copyFrom(lac.nioBuffer()));
+                readLacResponse.setLastEntryBody(ByteString.copyFrom(lastEntry.nioBuffer()));
+            } else {
+                status = StatusCode.ENOENTRY;
             }
         } catch (Bookie.NoLedgerException e) {
             status = StatusCode.ENOLEDGER;
-            logger.debug("No ledger found while performing readLac from ledger: {}", ledgerId, e);
-        } catch (BookieException.DataUnknownException e) {
-            status = StatusCode.EUNKNOWNLEDGERSTATE;
-            logger.error("Ledger {} in unknown state and cannot serve reacLac requests", ledgerId, e);
-        } catch (BookieException | IOException e) {
+            logger.error("No ledger found while performing readLac from ledger: {}", ledgerId);
+        } catch (IOException e) {
             status = StatusCode.EIO;
-            logger.error("IOException while performing readLac from ledger: {}", ledgerId, e);
+            logger.error("IOException while performing readLac from ledger: {}", ledgerId);
         } finally {
+            ReferenceCountUtil.release(lastEntry);
             ReferenceCountUtil.release(lac);
         }
 
-        try {
-            lastEntry = requestProcessor.bookie.readEntry(ledgerId, BookieProtocol.LAST_ADD_CONFIRMED);
-            if (lastEntry != null) {
-                readLacResponse.setLastEntryBody(ByteString.copyFrom(lastEntry.nioBuffer()));
-            }
-        } catch (Bookie.NoLedgerException e) {
-            status = StatusCode.ENOLEDGER;
-            logger.debug("No ledger found while trying to read last entry: {}", ledgerId, e);
-        } catch (BookieException.DataUnknownException e) {
-            status = StatusCode.EUNKNOWNLEDGERSTATE;
-            logger.error("Ledger in an unknown state while trying to read last entry: {}", ledgerId, e);
-        } catch (BookieException | IOException e) {
-            status = StatusCode.EIO;
-            logger.error("IOException while trying to read last entry: {}", ledgerId, e);
-        } finally {
-            ReferenceCountUtil.release(lastEntry);
-        }
-
-        if ((lac == null) && (lastEntry == null)) {
-            status = StatusCode.ENOENTRY;
-        }
-
         if (status == StatusCode.EOK) {
-            requestProcessor.getRequestStats().getReadLacStats()
-                .registerSuccessfulEvent(MathUtils.elapsedNanos(startTimeNanos), TimeUnit.NANOSECONDS);
+            requestProcessor.readLacStats.registerSuccessfulEvent(MathUtils.elapsedNanos(startTimeNanos),
+                    TimeUnit.NANOSECONDS);
         } else {
-            requestProcessor.getRequestStats().getReadLacStats()
-                .registerFailedEvent(MathUtils.elapsedNanos(startTimeNanos), TimeUnit.NANOSECONDS);
+            requestProcessor.readLacStats.registerFailedEvent(MathUtils.elapsedNanos(startTimeNanos),
+                    TimeUnit.NANOSECONDS);
         }
         // Finally set the status and return
         readLacResponse.setStatus(status);
@@ -117,7 +97,7 @@ class ReadLacProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void safeRun() {
         ReadLacResponse readLacResponse = getReadLacResponse();
         sendResponse(readLacResponse);
     }
@@ -129,6 +109,6 @@ class ReadLacProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
             .setReadLacResponse(readLacResponse);
         sendResponse(response.getStatus(),
                 response.build(),
-                requestProcessor.getRequestStats().getReadLacRequestStats());
+                requestProcessor.readLacRequestStats);
     }
 }

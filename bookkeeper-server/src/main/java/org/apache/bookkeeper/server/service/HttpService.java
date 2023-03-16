@@ -21,11 +21,8 @@ package org.apache.bookkeeper.server.service;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
-import org.apache.bookkeeper.common.component.ComponentInfoPublisher;
-import org.apache.bookkeeper.common.component.ComponentInfoPublisher.EndpointInfo;
-import org.apache.bookkeeper.conf.ServerConfiguration;
+
 import org.apache.bookkeeper.http.HttpServer;
-import org.apache.bookkeeper.http.HttpServerConfiguration;
 import org.apache.bookkeeper.http.HttpServerLoader;
 import org.apache.bookkeeper.server.component.ServerLifecycleComponent;
 import org.apache.bookkeeper.server.conf.BookieConfiguration;
@@ -48,18 +45,13 @@ public class HttpService extends ServerLifecycleComponent {
 
         HttpServerLoader.loadHttpServer(conf.getServerConf());
         server = HttpServerLoader.get();
-        checkNotNull(server, "httpServerClass is not configured or it could not be started,"
-                + " please check your configuration and logs");
+        checkNotNull(server);
         server.initialize(provider);
     }
 
     @Override
     protected void doStart() {
-        ServerConfiguration serverConf = conf.getServerConf();
-        HttpServerConfiguration tlsOption = new HttpServerConfiguration(serverConf.isHttpServerTlsEnable(),
-                serverConf.getHttpServerKeystorePath(), serverConf.getHttpServerKeystorePassword(),
-                serverConf.getHttpServerTrustStorePath(), serverConf.getHttpServerTrustStorePassword());
-        server.startServer(serverConf.getHttpServerPort(), serverConf.getHttpServerHost(), tlsOption);
+        server.startServer(conf.getServerConf().getHttpServerPort());
     }
 
     @Override
@@ -71,16 +63,4 @@ public class HttpService extends ServerLifecycleComponent {
     protected void doClose() throws IOException {
         server.stopServer();
     }
-
-    @Override
-    public void publishInfo(ComponentInfoPublisher componentInfoPublisher) {
-        if (conf.getServerConf().isHttpServerEnabled()) {
-            EndpointInfo endpoint = new EndpointInfo("httpserver",
-                    conf.getServerConf().getHttpServerPort(),
-                    "0.0.0.0",
-                    "http", null, null);
-            componentInfoPublisher.publishEndpoint(endpoint);
-        }
-    }
-
 }

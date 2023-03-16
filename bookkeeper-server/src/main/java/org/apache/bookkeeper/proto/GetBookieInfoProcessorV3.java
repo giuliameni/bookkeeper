@@ -22,6 +22,7 @@ package org.apache.bookkeeper.proto;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
 import org.apache.bookkeeper.proto.BookkeeperProtocol.GetBookieInfoRequest;
 import org.apache.bookkeeper.proto.BookkeeperProtocol.GetBookieInfoResponse;
 import org.apache.bookkeeper.proto.BookkeeperProtocol.Request;
@@ -31,15 +32,14 @@ import org.apache.bookkeeper.util.MathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * A processor class for v3 bookie metadata packets.
- */
-public class GetBookieInfoProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
-    private static final Logger LOG = LoggerFactory.getLogger(GetBookieInfoProcessorV3.class);
+import io.netty.channel.Channel;
 
-    public GetBookieInfoProcessorV3(Request request, BookieRequestHandler requestHandler,
+public class GetBookieInfoProcessorV3 extends PacketProcessorBaseV3 implements Runnable {
+    private final static Logger LOG = LoggerFactory.getLogger(GetBookieInfoProcessorV3.class);
+
+    public GetBookieInfoProcessorV3(Request request, Channel channel,
                                      BookieRequestProcessor requestProcessor) {
-        super(request, requestHandler, requestProcessor);
+        super(request, channel, requestProcessor);
     }
 
     private GetBookieInfoResponse getGetBookieInfoResponse() {
@@ -51,8 +51,8 @@ public class GetBookieInfoProcessorV3 extends PacketProcessorBaseV3 implements R
 
         if (!isVersionCompatible()) {
             getBookieInfoResponse.setStatus(StatusCode.EBADVERSION);
-            requestProcessor.getRequestStats().getGetBookieInfoStats()
-                .registerFailedEvent(MathUtils.elapsedNanos(startTimeNanos), TimeUnit.NANOSECONDS);
+            requestProcessor.getBookieInfoStats.registerFailedEvent(MathUtils.elapsedNanos(startTimeNanos),
+                    TimeUnit.NANOSECONDS);
             return getBookieInfoResponse.build();
         }
 
@@ -63,31 +63,27 @@ public class GetBookieInfoProcessorV3 extends PacketProcessorBaseV3 implements R
         long freeDiskSpace = 0L, totalDiskSpace = 0L;
         try {
             if ((requested & GetBookieInfoRequest.Flags.FREE_DISK_SPACE_VALUE) != 0) {
-                freeDiskSpace = requestProcessor.getBookie().getTotalFreeSpace();
+                freeDiskSpace = requestProcessor.bookie.getTotalFreeSpace();
                 getBookieInfoResponse.setFreeDiskSpace(freeDiskSpace);
             }
             if ((requested & GetBookieInfoRequest.Flags.TOTAL_DISK_CAPACITY_VALUE) != 0) {
-                totalDiskSpace = requestProcessor.getBookie().getTotalDiskSpace();
+                totalDiskSpace = requestProcessor.bookie.getTotalDiskSpace();
                 getBookieInfoResponse.setTotalDiskCapacity(totalDiskSpace);
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("FreeDiskSpace info is " + freeDiskSpace + " totalDiskSpace is: " + totalDiskSpace);
-            }
-            requestProcessor.getRequestStats().getGetBookieInfoStats()
-                    .registerSuccessfulEvent(MathUtils.elapsedNanos(startTimeNanos), TimeUnit.NANOSECONDS);
+            LOG.debug("FreeDiskSpace info is " + freeDiskSpace + " totalDiskSpace is: " + totalDiskSpace);
         } catch (IOException e) {
             status = StatusCode.EIO;
             LOG.error("IOException while getting  freespace/totalspace", e);
-            requestProcessor.getRequestStats().getGetBookieInfoStats()
-                    .registerFailedEvent(MathUtils.elapsedNanos(startTimeNanos), TimeUnit.NANOSECONDS);
         }
 
         getBookieInfoResponse.setStatus(status);
+        requestProcessor.getBookieInfoStats.registerSuccessfulEvent(MathUtils.elapsedNanos(startTimeNanos),
+                TimeUnit.NANOSECONDS);
         return getBookieInfoResponse.build();
     }
 
     @Override
-    public void run() {
+    public void safeRun() {
         GetBookieInfoResponse getBookieInfoResponse = getGetBookieInfoResponse();
         sendResponse(getBookieInfoResponse);
     }
@@ -99,6 +95,6 @@ public class GetBookieInfoProcessorV3 extends PacketProcessorBaseV3 implements R
                 .setGetBookieInfoResponse(getBookieInfoResponse);
         sendResponse(response.getStatus(),
                      response.build(),
-                     requestProcessor.getRequestStats().getGetBookieInfoRequestStats());
+                     requestProcessor.getBookieInfoRequestStats);
     }
 }

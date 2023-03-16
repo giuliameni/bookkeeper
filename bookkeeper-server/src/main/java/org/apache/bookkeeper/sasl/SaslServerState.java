@@ -45,7 +45,7 @@ import org.apache.zookeeper.server.auth.KerberosName;
 import org.slf4j.LoggerFactory;
 
 /**
- * Server side Sasl implementation.
+ * Server side Sasl implementation
  */
 public class SaslServerState {
 
@@ -76,7 +76,8 @@ public class SaslServerState {
 
                 final String servicePrincipalNameAndHostname = servicePrincipal.getName();
                 int indexOf = servicePrincipalNameAndHostname.indexOf("/");
-                final String serviceHostnameAndKerbDomain = servicePrincipalNameAndHostname.substring(indexOf + 1);
+                final String serviceHostnameAndKerbDomain = servicePrincipalNameAndHostname.substring(indexOf + 1,
+                    servicePrincipalNameAndHostname.length());
                 int indexOfAt = serviceHostnameAndKerbDomain.indexOf("@");
 
                 final String servicePrincipalName, serviceHostname;
@@ -94,8 +95,8 @@ public class SaslServerState {
                         public SaslServer run() {
                             try {
                                 SaslServer saslServer;
-                                saslServer = Sasl.createSaslServer("GSSAPI", servicePrincipalName, serviceHostname,
-                                        null, callbackHandler);
+                                saslServer = Sasl.createSaslServer("GSSAPI", servicePrincipalName, serviceHostname, null,
+                                    callbackHandler);
                                 return saslServer;
                             } catch (SaslException e) {
                                 throw new RuntimeException(e);
@@ -143,15 +144,13 @@ public class SaslServerState {
         private String userName;
         private final Map<String, String> credentials = new HashMap<>();
 
-        public SaslServerCallbackHandler(Configuration configuration, ServerConfiguration serverConfiguration)
-                throws IOException {
+        public SaslServerCallbackHandler(Configuration configuration, ServerConfiguration serverConfiguration) throws IOException {
             String configurationEntry = serverConfiguration.getString(SaslConstants.JAAS_BOOKIE_SECTION_NAME,
                 SaslConstants.JAAS_DEFAULT_BOOKIE_SECTION_NAME);
-            AppConfigurationEntry[] configurationEntries = configuration.getAppConfigurationEntry(configurationEntry);
+            AppConfigurationEntry configurationEntries[] = configuration.getAppConfigurationEntry(configurationEntry);
 
             if (configurationEntries == null) {
-                String errorMessage = "Could not find a '" + configurationEntry
-                    + "' entry in this configuration: Server cannot start.";
+                String errorMessage = "Could not find a '" + configurationEntry + "' entry in this configuration: Server cannot start.";
 
                 throw new IOException(errorMessage);
             }

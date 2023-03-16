@@ -18,8 +18,7 @@
  */
 package org.apache.bookkeeper.server.http.service;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.google.common.base.Preconditions;
 import org.apache.bookkeeper.client.BookKeeperAdmin;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.http.HttpServer;
@@ -41,7 +40,7 @@ public class TriggerAuditService implements HttpEndpointService {
     protected BookKeeperAdmin bka;
 
     public TriggerAuditService(ServerConfiguration conf, BookKeeperAdmin bka) {
-        checkNotNull(conf);
+        Preconditions.checkNotNull(conf);
         this.conf = conf;
         this.bka = bka;
     }
@@ -65,9 +64,7 @@ public class TriggerAuditService implements HttpEndpointService {
 
             response.setCode(HttpServer.StatusCode.OK);
             response.setBody("Success trigger audit.");
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("response body:" + response.getBody());
-            }
+            LOG.debug("response body:" + response.getBody());
             return response;
         } else {
             response.setCode(HttpServer.StatusCode.NOT_FOUND);
