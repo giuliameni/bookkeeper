@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,14 +21,10 @@
 
 package org.apache.bookkeeper.bookie;
 
-import io.netty.buffer.ByteBufAllocator;
 import java.io.IOException;
-import java.util.function.Supplier;
+
 import org.apache.bookkeeper.conf.ServerConfiguration;
-import org.apache.bookkeeper.discover.BookieServiceInfo;
-import org.apache.bookkeeper.discover.RegistrationManager;
 import org.apache.bookkeeper.stats.StatsLogger;
-import org.apache.bookkeeper.util.DiskChecker;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,28 +35,32 @@ import org.slf4j.LoggerFactory;
  * ReadOnlyBookie is force started as readonly, and will not change to writable.
  * </p>
  */
-public class ReadOnlyBookie extends BookieImpl {
+public class ReadOnlyBookie extends Bookie {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReadOnlyBookie.class);
 
-    public ReadOnlyBookie(ServerConfiguration conf,
-                          RegistrationManager registrationManager,
-                          LedgerStorage storage,
-                          DiskChecker diskChecker,
-                          LedgerDirsManager ledgerDirsManager,
-                          LedgerDirsManager indexDirsManager,
-                          StatsLogger statsLogger,
-                          ByteBufAllocator allocator, Supplier<BookieServiceInfo> bookieServiceInfoProvider)
+    public ReadOnlyBookie(ServerConfiguration conf, StatsLogger statsLogger)
             throws IOException, KeeperException, InterruptedException, BookieException {
-        super(conf, registrationManager, storage, diskChecker,
-              ledgerDirsManager, indexDirsManager, statsLogger, allocator, bookieServiceInfoProvider);
+        super(conf, statsLogger);
         if (conf.isReadOnlyModeEnabled()) {
-            stateManager.forceToReadOnly();
+            forceReadOnly.set(true);
         } else {
             String err = "Try to init ReadOnly Bookie, while ReadOnly mode is not enabled";
             LOG.error(err);
             throw new IOException(err);
         }
         LOG.info("Running bookie in force readonly mode.");
+    }
+
+    @Override
+    public void doTransitionToWritableMode() {
+        // no-op
+        LOG.info("Skip transition to writable mode for readonly bookie");
+    }
+
+    @Override
+    public void doTransitionToReadOnlyMode() {
+        // no-op
+        LOG.info("Skip transition to readonly mode for readonly bookie");
     }
 }

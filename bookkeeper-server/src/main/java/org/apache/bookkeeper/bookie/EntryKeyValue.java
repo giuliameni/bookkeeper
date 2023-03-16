@@ -21,6 +21,7 @@ package org.apache.bookkeeper.bookie;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -108,7 +109,6 @@ public class EntryKeyValue extends EntryKey {
     /**
     * String representation.
     */
-    @Override
     public String toString() {
         return ledgerId + ":" + entryId;
     }

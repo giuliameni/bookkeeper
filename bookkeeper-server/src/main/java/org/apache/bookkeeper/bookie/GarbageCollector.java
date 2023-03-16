@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -43,7 +43,7 @@ public interface GarbageCollector {
          *
          * @param ledgerId Ledger ID to be cleaned
          */
-        void clean(long ledgerId);
+        void clean(final long ledgerId);
     }
 
 }

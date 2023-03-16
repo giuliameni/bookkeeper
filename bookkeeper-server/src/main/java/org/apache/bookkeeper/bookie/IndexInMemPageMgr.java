@@ -1,4 +1,4 @@
-/*
+/**
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,15 +20,14 @@
  */
 package org.apache.bookkeeper.bookie;
 
-import static java.lang.Long.max;
+import static org.apache.bookkeeper.bookie.BookKeeperServerStats.INDEX_INMEM_ILLEGAL_STATE_DELETE;
+import static org.apache.bookkeeper.bookie.BookKeeperServerStats.INDEX_INMEM_ILLEGAL_STATE_RESET;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.LEDGER_CACHE_HIT;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.LEDGER_CACHE_MISS;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.LEDGER_CACHE_READ_PAGE;
 import static org.apache.bookkeeper.bookie.BookKeeperServerStats.NUM_INDEX_PAGES;
 
-// CHECKSTYLE.OFF: IllegalImport
 import com.google.common.base.Stopwatch;
-import io.netty.util.internal.PlatformDependent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,17 +40,17 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.bookkeeper.bookie.stats.IndexInMemPageMgrStats;
 import org.apache.bookkeeper.conf.ServerConfiguration;
 import org.apache.bookkeeper.stats.Counter;
 import org.apache.bookkeeper.stats.Gauge;
 import org.apache.bookkeeper.stats.OpStatsLogger;
 import org.apache.bookkeeper.stats.StatsLogger;
+import org.apache.bookkeeper.util.DirectMemoryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-// CHECKSTYLE.ON: IllegalImport
 
 class IndexInMemPageMgr {
     private static final Logger LOG = LoggerFactory.getLogger(IndexInMemPageMgr.class);
@@ -65,14 +64,16 @@ class IndexInMemPageMgr {
         final ConcurrentLinkedQueue<LedgerEntryPage> listOfFreePages;
 
         // Stats
-        private final IndexInMemPageMgrStats inMemPageMgrStats;
+        final Counter illegalStateResetCounter;
+        final Counter illegalStateDeleteCounter;
 
         public InMemPageCollection(StatsLogger statsLogger) {
             pages = new ConcurrentHashMap<>();
             lruCleanPageMap =
                     Collections.synchronizedMap(new LinkedHashMap<EntryKey, LedgerEntryPage>(16, 0.75f, true));
             listOfFreePages = new ConcurrentLinkedQueue<LedgerEntryPage>();
-            inMemPageMgrStats = new IndexInMemPageMgrStats(statsLogger);
+            illegalStateResetCounter = statsLogger.getCounter(INDEX_INMEM_ILLEGAL_STATE_RESET);
+            illegalStateDeleteCounter = statsLogger.getCounter(INDEX_INMEM_ILLEGAL_STATE_DELETE);
         }
 
         /**
@@ -153,11 +154,22 @@ class IndexInMemPageMgr {
             ConcurrentMap<Long, LedgerEntryPage> lPages = pages.remove(ledgerId);
             if (null != lPages) {
                 for (Map.Entry<Long, LedgerEntryPage> pageEntry: lPages.entrySet()) {
+                    long entryId = pageEntry.getKey();
+                    synchronized (lruCleanPageMap) {
+                        lruCleanPageMap.remove(new EntryKey(ledgerId, entryId));
+                    }
+
                     LedgerEntryPage lep = pageEntry.getValue();
-                    lep.usePage();
-                    lep.markDeleted();
-                    lep.releasePage();
+                    // Cannot imagine under what circumstances we would have a null entry here
+                    // Just being safe
+                    if (null != lep) {
+                        if (lep.inUse()) {
+                            illegalStateDeleteCounter.inc();
+                        }
+                        listOfFreePages.add(lep);
+                    }
                 }
+
             }
         }
 
@@ -293,7 +305,7 @@ class IndexInMemPageMgr {
 
         public void addToListOfFreePages(LedgerEntryPage lep) {
             if ((null == lep) || lep.inUse()) {
-                inMemPageMgrStats.getIllegalStateResetCounter().inc();
+                illegalStateResetCounter.inc();
             }
             if (null != lep) {
                 listOfFreePages.add(lep);
@@ -307,11 +319,7 @@ class IndexInMemPageMgr {
 
         @Override
         public void onResetInUse(LedgerEntryPage lep) {
-            if (!lep.isDeleted()) {
-                addToCleanPagesList(lep);
-            } else {
-                addToListOfFreePages(lep);
-            }
+            addToCleanPagesList(lep);
         }
 
         @Override
@@ -337,6 +345,12 @@ class IndexInMemPageMgr {
     // flush and read pages
     private final IndexPersistenceMgr indexPersistenceManager;
 
+    /**
+     * the list of potentially dirty ledgers.
+     */
+    private final ConcurrentLinkedQueue<Long> ledgersToFlush = new ConcurrentLinkedQueue<Long>();
+    private final ConcurrentSkipListSet<Long> ledgersFlushing = new ConcurrentSkipListSet<Long>();
+
     // Stats
     private final Counter ledgerCacheHitCounter;
     private final Counter ledgerCacheMissCounter;
@@ -352,7 +366,7 @@ class IndexInMemPageMgr {
         this.indexPersistenceManager = indexPersistenceManager;
         this.pageMapAndList = new InMemPageCollection(statsLogger);
 
-        long maxDirectMemory = PlatformDependent.estimateMaxDirectMemory();
+        long maxDirectMemory = DirectMemoryUtils.maxDirectMemory();
 
         if (conf.getPageLimit() <= 0) {
             // By default, allocate a third of the direct memory to the page cache
@@ -361,7 +375,7 @@ class IndexInMemPageMgr {
             this.pageLimit = conf.getPageLimit();
         }
         LOG.info("maxDirectMemory = {}, pageSize = {}, pageLimit = {}",
-                maxDirectMemory, pageSize, pageLimit);
+                new Object[] { maxDirectMemory, pageSize, pageLimit });
         // Expose Stats
         this.ledgerCacheHitCounter = statsLogger.getCounter(LEDGER_CACHE_HIT);
         this.ledgerCacheMissCounter = statsLogger.getCounter(LEDGER_CACHE_MISS);
@@ -390,13 +404,27 @@ class IndexInMemPageMgr {
     }
 
     /**
-     * @return number of page used in ledger cache
+     * @return entries per page used in ledger cache
      */
-    private int getNumUsedPages() {
-        return pageCount.get();
+    public int getEntriesPerPage() {
+        return entriesPerPage;
     }
 
     /**
+     * @return page limitation in ledger cache
+     */
+    public int getPageLimit() {
+        return pageLimit;
+    }
+
+    /**
+     * @return number of page used in ledger cache
+     */
+    public int getNumUsedPages() {
+        return pageCount.get();
+    }
+
+        /**
      * Get the ledger entry page for a given <i>pageEntry</i>.
      *
      * @param ledger
@@ -406,7 +434,7 @@ class IndexInMemPageMgr {
      * @return ledger entry page
      * @throws IOException
      */
-    LedgerEntryPage getLedgerEntryPage(long ledger,
+    public LedgerEntryPage getLedgerEntryPage(long ledger,
                                               long pageEntry) throws IOException {
         LedgerEntryPage lep = getLedgerEntryPageFromCache(ledger, pageEntry, false);
         if (lep == null) {
@@ -476,6 +504,7 @@ class IndexInMemPageMgr {
 
     void removePagesForLedger(long ledgerId) {
         pageMapAndList.removeEntriesForALedger(ledgerId);
+        ledgersToFlush.remove(ledgerId);
     }
 
     long getLastEntryInMem(long ledgerId) {
@@ -513,12 +542,18 @@ class IndexInMemPageMgr {
     }
 
     void flushOneOrMoreLedgers(boolean doAll) throws IOException {
-        List<Long> ledgersToFlush = new ArrayList<>(pageMapAndList.getActiveLedgers());
-        for (Long potentiallyDirtyLedger : ledgersToFlush) {
+        if (ledgersToFlush.isEmpty()) {
+            ledgersToFlush.addAll(pageMapAndList.getActiveLedgers());
+        }
+        Long potentiallyDirtyLedger;
+        while (null != (potentiallyDirtyLedger = ledgersToFlush.poll())) {
+            if (!ledgersFlushing.add(potentiallyDirtyLedger)) {
+                continue;
+            }
             try {
                 flushSpecificLedger(potentiallyDirtyLedger);
-            } catch (Bookie.NoLedgerException e) {
-                continue;
+            } finally {
+                ledgersFlushing.remove(potentiallyDirtyLedger);
             }
             if (!doAll) {
                 break;
@@ -573,8 +608,6 @@ class IndexInMemPageMgr {
             lep = getLedgerEntryPage(ledger, pageEntry);
             assert lep != null;
             lep.setOffset(offset, offsetInPage * LedgerEntryPage.getIndexEntrySize());
-        } catch (FileInfo.FileInfoDeletedException e) {
-            throw new Bookie.NoLedgerException(ledger);
         } finally {
             if (null != lep) {
                 lep.releasePage();
@@ -596,83 +629,5 @@ class IndexInMemPageMgr {
                 lep.releasePage();
             }
         }
-    }
-
-    /**
-     * Represents a page of the index.
-     */
-    private class PageEntriesImpl implements LedgerCache.PageEntries {
-        final long ledgerId;
-        final long initEntry;
-
-        PageEntriesImpl(long ledgerId, long initEntry) {
-            this.ledgerId = ledgerId;
-            this.initEntry = initEntry;
-        }
-
-        @Override
-        public LedgerEntryPage getLEP() throws IOException {
-            return getLedgerEntryPage(ledgerId, initEntry);
-        }
-
-        @Override
-        public long getFirstEntry() {
-            return initEntry;
-        }
-
-        @Override
-        public long getLastEntry() {
-            return initEntry + entriesPerPage;
-        }
-    }
-
-    /**
-     * Iterable over index pages -- returns PageEntries rather than individual
-     * entries because getEntries() above needs to be able to throw an IOException.
-     */
-    private class PageEntriesIterableImpl implements LedgerCache.PageEntriesIterable {
-        final long ledgerId;
-        final FileInfoBackingCache.CachedFileInfo fi;
-        final long totalEntries;
-
-        long curEntry = 0;
-
-        PageEntriesIterableImpl(long ledgerId) throws IOException {
-            this.ledgerId = ledgerId;
-            this.fi = indexPersistenceManager.getFileInfo(ledgerId, null);
-            this.totalEntries = max(entriesPerPage * (fi.size() / pageSize), getLastEntryInMem(ledgerId));
-        }
-
-        @Override
-        public Iterator<LedgerCache.PageEntries> iterator() {
-            return new Iterator<LedgerCache.PageEntries>() {
-                @Override
-                public boolean hasNext() {
-                    return curEntry < totalEntries;
-                }
-
-                @Override
-                public LedgerCache.PageEntries next() {
-                    LedgerCache.PageEntries next = new PageEntriesImpl(ledgerId, curEntry);
-                    curEntry += entriesPerPage;
-                    return next;
-                }
-            };
-        }
-
-        @Override
-        public void close() {
-            fi.release();
-        }
-    }
-
-    /**
-     * Return iterator over pages for mapping entries to entry loggers.
-     * @param ledgerId
-     * @return Iterator over pages
-     * @throws IOException
-     */
-    public LedgerCache.PageEntriesIterable listEntries(long ledgerId) throws IOException {
-        return new PageEntriesIterableImpl(ledgerId);
     }
 }

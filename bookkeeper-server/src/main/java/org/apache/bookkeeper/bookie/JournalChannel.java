@@ -21,16 +21,16 @@
 
 package org.apache.bookkeeper.bookie;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static com.google.common.base.Charsets.UTF_8;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
-import org.apache.bookkeeper.conf.ServerConfiguration;
-import org.apache.bookkeeper.util.PageCacheUtil;
+import org.apache.bookkeeper.util.NativeIO;
 import org.apache.bookkeeper.util.ZeroBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,19 +42,18 @@ import org.slf4j.LoggerFactory;
 class JournalChannel implements Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(JournalChannel.class);
 
-    static final long MB = 1024 * 1024L;
-    final BookieFileChannel channel;
+    final RandomAccessFile randomAccessFile;
     final int fd;
     final FileChannel fc;
+    final BufferedChannel bc;
     final int formatVersion;
-    BufferedChannel bc;
     long nextPrealloc = 0;
 
     final byte[] magicWord = "BKLG".getBytes(UTF_8);
 
     static final int SECTOR_SIZE = 512;
     private static final int START_OF_FILE = -12345;
-    private static final long cacheDropLagBytes = 8 * MB;
+    private static long cacheDropLagBytes = 8 * 1024 * 1024;
 
     // No header
     static final int V1 = 1;
@@ -67,13 +66,11 @@ class JournalChannel implements Closeable {
     // 1) expanding header to 512
     // 2) Padding writes to align sector size
     static final int V5 = 5;
-    // Adding explicit lac entry
-    public static final int V6 = 6;
 
     static final int HEADER_SIZE = SECTOR_SIZE; // align header to sector size
     static final int VERSION_HEADER_SIZE = 8; // 4byte magic word, 4 byte version
     static final int MIN_COMPAT_JOURNAL_FORMAT_VERSION = V1;
-    static final int CURRENT_JOURNAL_FORMAT_VERSION = V6;
+    static final int CURRENT_JOURNAL_FORMAT_VERSION = V5;
 
     private final long preAllocSize;
     private final int journalAlignSize;
@@ -83,51 +80,32 @@ class JournalChannel implements Closeable {
     // The position of the file channel's last drop position
     private long lastDropPosition = 0L;
 
-    final ServerConfiguration configuration;
-
     // Mostly used by tests
     JournalChannel(File journalDirectory, long logId) throws IOException {
-        this(journalDirectory, logId, 4 * MB, 65536, START_OF_FILE, new ServerConfiguration(),
-            new DefaultFileChannelProvider());
+        this(journalDirectory, logId, 4 * 1024 * 1024, 65536, START_OF_FILE);
     }
 
     // Open journal for scanning starting from the first record in journal.
-    JournalChannel(File journalDirectory, long logId,
-                   long preAllocSize, int writeBufferSize, ServerConfiguration conf,
-                   FileChannelProvider provider) throws IOException {
-        this(journalDirectory, logId, preAllocSize, writeBufferSize, START_OF_FILE, conf, provider);
+    JournalChannel(File journalDirectory, long logId, long preAllocSize, int writeBufferSize) throws IOException {
+        this(journalDirectory, logId, preAllocSize, writeBufferSize, START_OF_FILE);
     }
 
     // Open journal for scanning starting from given position.
     JournalChannel(File journalDirectory, long logId,
-                   long preAllocSize, int writeBufferSize, long position, ServerConfiguration conf,
-                   FileChannelProvider provider) throws IOException {
-         this(journalDirectory, logId, preAllocSize, writeBufferSize, SECTOR_SIZE,
-                 position, false, V5, Journal.BufferedChannelBuilder.DEFAULT_BCBUILDER,
-             conf, provider, null);
+                   long preAllocSize, int writeBufferSize, long position) throws IOException {
+         this(journalDirectory, logId, preAllocSize, writeBufferSize, SECTOR_SIZE, position, false, V5);
     }
 
     // Open journal to write
     JournalChannel(File journalDirectory, long logId,
                    long preAllocSize, int writeBufferSize, int journalAlignSize,
-                   boolean fRemoveFromPageCache, int formatVersionToWrite,
-                   ServerConfiguration conf, FileChannelProvider provider) throws IOException {
-        this(journalDirectory, logId, preAllocSize, writeBufferSize, journalAlignSize, fRemoveFromPageCache,
-                formatVersionToWrite, Journal.BufferedChannelBuilder.DEFAULT_BCBUILDER, conf, provider, null);
-    }
-
-    JournalChannel(File journalDirectory, long logId,
-                   long preAllocSize, int writeBufferSize, int journalAlignSize,
-                   boolean fRemoveFromPageCache, int formatVersionToWrite,
-                   Journal.BufferedChannelBuilder bcBuilder, ServerConfiguration conf,
-                   FileChannelProvider provider, Long toReplaceLogId) throws IOException {
+                   boolean fRemoveFromPageCache, int formatVersionToWrite) throws IOException {
         this(journalDirectory, logId, preAllocSize, writeBufferSize, journalAlignSize,
-                START_OF_FILE, fRemoveFromPageCache, formatVersionToWrite, bcBuilder, conf, provider, toReplaceLogId);
+             START_OF_FILE, fRemoveFromPageCache, formatVersionToWrite);
     }
 
     /**
      * Create a journal file.
-     * Allows injection of BufferedChannelBuilder for testing purposes.
      *
      * @param journalDirectory
      *          directory to store the journal file.
@@ -150,48 +128,45 @@ class JournalChannel implements Closeable {
     private JournalChannel(File journalDirectory, long logId,
                            long preAllocSize, int writeBufferSize, int journalAlignSize,
                            long position, boolean fRemoveFromPageCache,
-                           int formatVersionToWrite, Journal.BufferedChannelBuilder bcBuilder,
-                           ServerConfiguration conf,
-                           FileChannelProvider provider, Long toReplaceLogId) throws IOException {
+                           int formatVersionToWrite) throws IOException {
         this.journalAlignSize = journalAlignSize;
         this.zeros = ByteBuffer.allocate(journalAlignSize);
         this.preAllocSize = preAllocSize - preAllocSize % journalAlignSize;
         this.fRemoveFromPageCache = fRemoveFromPageCache;
-        this.configuration = conf;
-
-        boolean reuseFile = false;
         File fn = new File(journalDirectory, Long.toHexString(logId) + ".txn");
-        if (toReplaceLogId != null && logId != toReplaceLogId && provider.supportReuseFile()) {
-            File toReplaceFile = new File(journalDirectory, Long.toHexString(toReplaceLogId) + ".txn");
-            if (toReplaceFile.exists()) {
-                renameJournalFile(toReplaceFile, fn);
-                provider.notifyRename(toReplaceFile, fn);
-                reuseFile = true;
-            }
-        }
-        channel = provider.open(fn, configuration);
 
         if (formatVersionToWrite < V4) {
             throw new IOException("Invalid journal format to write : version = " + formatVersionToWrite);
         }
 
         LOG.info("Opening journal {}", fn);
-        if (!channel.fileExists(fn)) { // create new journal file to write, write version
+        if (!fn.exists()) { // new file, write version
             if (!fn.createNewFile()) {
                 LOG.error("Journal file {}, that shouldn't exist, already exists. "
                           + " is there another bookie process running?", fn);
                 throw new IOException("File " + fn
                         + " suddenly appeared, is another bookie process running?");
             }
-            fc = channel.getFileChannel();
+            randomAccessFile = new RandomAccessFile(fn, "rw");
+            fc = randomAccessFile.getChannel();
             formatVersion = formatVersionToWrite;
-            writeHeader(bcBuilder, writeBufferSize);
-        } else if (reuseFile) { // Open an existing journal to write, it needs fileChannelProvider support reuse file.
-            fc = channel.getFileChannel();
-            formatVersion = formatVersionToWrite;
-            writeHeader(bcBuilder, writeBufferSize);
-        } else {  // open an existing file to read.
-            fc = channel.getFileChannel();
+
+            int headerSize = (V4 == formatVersion) ? VERSION_HEADER_SIZE : HEADER_SIZE;
+            ByteBuffer bb = ByteBuffer.allocate(headerSize);
+            ZeroBuffer.put(bb);
+            bb.clear();
+            bb.put(magicWord);
+            bb.putInt(formatVersion);
+            bb.clear();
+            fc.write(bb);
+
+            bc = new BufferedChannel(fc, writeBufferSize);
+            forceWrite(true);
+            nextPrealloc = this.preAllocSize;
+            fc.write(zeros, nextPrealloc - journalAlignSize);
+        } else {  // open an existing file
+            randomAccessFile = new RandomAccessFile(fn, "r");
+            fc = randomAccessFile.getChannel();
             bc = null; // readonly
 
             ByteBuffer bb = ByteBuffer.allocate(VERSION_HEADER_SIZE);
@@ -237,37 +212,12 @@ class JournalChannel implements Closeable {
                 }
             } catch (IOException e) {
                 LOG.error("Bookie journal file can seek to position :", e);
-                throw e;
             }
         }
         if (fRemoveFromPageCache) {
-            this.fd = PageCacheUtil.getSysFileDescriptor(channel.getFD());
+            this.fd = NativeIO.getSysFileDescriptor(randomAccessFile.getFD());
         } else {
             this.fd = -1;
-        }
-    }
-
-    private void writeHeader(Journal.BufferedChannelBuilder bcBuilder,
-                             int writeBufferSize) throws IOException {
-        int headerSize = (V4 == formatVersion) ? VERSION_HEADER_SIZE : HEADER_SIZE;
-        ByteBuffer bb = ByteBuffer.allocate(headerSize);
-        ZeroBuffer.put(bb);
-        bb.clear();
-        bb.put(magicWord);
-        bb.putInt(formatVersion);
-        bb.clear();
-        fc.write(bb);
-
-        bc = bcBuilder.create(fc, writeBufferSize);
-        forceWrite(true);
-        nextPrealloc = this.preAllocSize;
-        fc.write(zeros, nextPrealloc - journalAlignSize);
-    }
-
-    public static void renameJournalFile(File source, File target) throws IOException {
-        if (source == null || target == null || !source.renameTo(target)) {
-            LOG.error("Failed to rename file {} to {}", source, target);
-            throw new IOException("Failed to rename file " + source + " to " + target);
         }
     }
 
@@ -295,11 +245,8 @@ class JournalChannel implements Closeable {
         return fc.read(dst);
     }
 
-    @Override
     public void close() throws IOException {
-        if (bc != null) {
-            bc.close();
-        }
+        fc.close();
     }
 
     public void forceWrite(boolean forceMetadata) throws IOException {
@@ -323,10 +270,9 @@ class JournalChannel implements Closeable {
         if (fRemoveFromPageCache) {
             long newDropPos = newForceWritePosition - cacheDropLagBytes;
             if (lastDropPosition < newDropPos) {
-                PageCacheUtil.bestEffortRemoveFromPageCache(fd, lastDropPosition, newDropPos - lastDropPosition);
+                NativeIO.bestEffortRemoveFromPageCache(fd, lastDropPosition, newDropPos - lastDropPosition);
             }
             this.lastDropPosition = newDropPos;
         }
     }
-
 }
