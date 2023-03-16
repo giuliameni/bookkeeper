@@ -40,6 +40,8 @@ jobs:
     - name: Read settings.xml
       run: |
        cat ~/.m2/settings.xml
+    - name: running
+      run: mvn clean install
 
 
 
