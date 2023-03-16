@@ -19,9 +19,8 @@
  */
 package org.apache.bookkeeper.benchmark;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static com.google.common.base.Charsets.UTF_8;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -36,7 +35,6 @@ import org.apache.bookkeeper.client.BookKeeper;
 import org.apache.bookkeeper.client.LedgerEntry;
 import org.apache.bookkeeper.client.LedgerHandle;
 import org.apache.bookkeeper.conf.ClientConfiguration;
-import org.apache.bookkeeper.zookeeper.ZooKeeperClient;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -44,6 +42,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
+import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +55,6 @@ public class BenchReadThroughputLatency {
     private static final Pattern LEDGER_PATTERN = Pattern.compile("L([0-9]+)$");
 
     private static final Comparator<String> ZK_LEDGER_COMPARE = new Comparator<String>() {
-        @Override
         public int compare(String o1, String o2) {
             try {
                 Matcher m1 = LEDGER_PATTERN.matcher(o1);
@@ -123,7 +121,7 @@ public class BenchReadThroughputLatency {
                 Thread.sleep(1000);
             }
         } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
+            // ignore
         } catch (Exception e) {
             LOG.error("Exception in reader", e);
         } finally {
@@ -148,7 +146,6 @@ public class BenchReadThroughputLatency {
     }
 
     @SuppressWarnings("deprecation")
-    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public static void main(String[] args) throws Exception {
         Options options = new Options();
         options.addOption("ledger", true, "Ledger to read. If empty, read all ledgers which come available. "
@@ -189,21 +186,30 @@ public class BenchReadThroughputLatency {
         }
 
         final CountDownLatch shutdownLatch = new CountDownLatch(1);
+        final CountDownLatch connectedLatch = new CountDownLatch(1);
         final String nodepath = String.format("/ledgers/L%010d", ledger.get());
 
         final ClientConfiguration conf = new ClientConfiguration();
         conf.setReadTimeout(sockTimeout).setZkServers(servers);
 
-        try (ZooKeeperClient zk = ZooKeeperClient.newBuilder()
-                .connectString(servers)
-                .sessionTimeoutMs(3000)
-                .build()) {
-            final Set<String> processedLedgers = new HashSet<String>();
+
+        final ZooKeeper zk = new ZooKeeper(servers, 3000, new Watcher() {
+                public void process(WatchedEvent event) {
+                    if (event.getState() == Event.KeeperState.SyncConnected
+                            && event.getType() == Event.EventType.None) {
+                        connectedLatch.countDown();
+                    }
+                }
+            });
+        final Set<String> processedLedgers = new HashSet<String>();
+        try {
             zk.register(new Watcher() {
-                    @Override
                     public void process(WatchedEvent event) {
                         try {
-                            if (event.getType() == Event.EventType.NodeCreated
+                            if (event.getState() == Event.KeeperState.SyncConnected
+                                && event.getType() == Event.EventType.None) {
+                                connectedLatch.countDown();
+                            } else if (event.getType() == Event.EventType.NodeCreated
                                        && event.getPath().equals(nodepath)) {
                                 readLedger(conf, ledger.get(), passwd);
                                 shutdownLatch.countDown();
@@ -229,7 +235,6 @@ public class BenchReadThroughputLatency {
                                             final Long ledgerId = Long.valueOf(m.group(1));
                                             processedLedgers.add(ledger);
                                             Thread t = new Thread() {
-                                                @Override
                                                 public void run() {
                                                     readLedger(conf, ledgerId, passwd);
                                                 }
@@ -251,7 +256,7 @@ public class BenchReadThroughputLatency {
                         }
                     }
                 });
-
+            connectedLatch.await();
             if (ledger.get() != 0) {
                 if (zk.exists(nodepath, true) != null) {
                     readLedger(conf, ledger.get(), passwd);
@@ -264,6 +269,8 @@ public class BenchReadThroughputLatency {
             }
             shutdownLatch.await();
             LOG.info("Shutting down");
+        } finally {
+            zk.close();
         }
     }
 }
