@@ -25,9 +25,13 @@ jobs:
         distribution: 'temurin'
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
+    - name: Set up Maven
+      run: |
+        mkdir -p ~/.m2
+        cp settings.xml ~/.m2/settings.xml
 
     - name: Build with Mave
-      run: mvn -Dmaven.repo.mirror.url=https://repo1.maven.org/maven2/ clean install -DskipTests -Dcheckstyle.skip 
+      run: mvn clean install -DskipTests -Dcheckstyle.skip 
 
 
 
