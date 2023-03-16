@@ -23,7 +23,7 @@
   <parent>
     <artifactId>bookkeeper-dist</artifactId>
     <groupId>org.apache.bookkeeper</groupId>
-    <version>4.16.0-SNAPSHOT</version>
+    <version>4.6.0</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -49,16 +49,15 @@
       <groupId>org.apache.bookkeeper.stats</groupId>
       <artifactId>codahale-metrics-provider</artifactId>
       <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>amqp-client</artifactId>
-          <groupId>com.rabbitmq</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.bookkeeper.stats</groupId>
       <artifactId>prometheus-metrics-provider</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.bookkeeper.stats</groupId>
+      <artifactId>twitter-finagle-provider</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -70,54 +69,26 @@
     </dependency>
     <dependency>
       <groupId>org.apache.bookkeeper.http</groupId>
+      <artifactId>twitter-http-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.bookkeeper.http</groupId>
       <artifactId>vertx-http-server</artifactId>
       <version>${project.version}</version>
     </dependency>
 
-    <!-- bookkeeper.tools (new CLI) -->
-    <dependency>
-      <groupId>org.apache.bookkeeper</groupId>
-      <artifactId>bookkeeper-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <!-- dlog -->
-    <dependency>
-      <groupId>org.apache.distributedlog</groupId>
-      <artifactId>distributedlog-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-
-    <!-- stream.storage -->
-    <dependency>
-       <groupId>org.apache.bookkeeper</groupId>
-       <artifactId>stream-storage-server</artifactId>
-       <version>${project.version}</version>
-    </dependency>
-
-    <!-- bookkeeper benchmark -->
     <dependency>
       <groupId>org.apache.bookkeeper</groupId>
       <artifactId>bookkeeper-benchmark</artifactId>
       <version>${project.version}</version>
     </dependency>
 
+    <!-- slf4j binding -->
     <dependency>
-      <groupId>org.apache.bookkeeper</groupId>
-      <artifactId>bookkeeper-perf</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-       <!-- needed by ZooKeeper server -->
-       <groupId>org.xerial.snappy</groupId>
-       <artifactId>snappy-java</artifactId>
-    </dependency>
-    <dependency>
-        <!-- needed by ZooKeeper server -->
-       <groupId>io.dropwizard.metrics</groupId>
-       <artifactId>metrics-core</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
   </dependencies>
 
@@ -132,7 +103,6 @@
           <descriptors>
             <descriptor>../src/assemble/bin-all.xml</descriptor>
           </descriptors>
-          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>

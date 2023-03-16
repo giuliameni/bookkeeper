@@ -19,7 +19,7 @@
   <parent>
     <artifactId>bookkeeper</artifactId>
     <groupId>org.apache.bookkeeper</groupId>
-    <version>4.16.0-SNAPSHOT</version>
+    <version>4.6.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>bookkeeper-dist</artifactId>
@@ -28,7 +28,6 @@
   <modules>
     <module>all</module>
     <module>server</module>
-    <module>bkctl</module>
   </modules>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -54,7 +53,6 @@
           <descriptors>
             <descriptor>src/assemble/src.xml</descriptor>
           </descriptors>
-          <tarLongFileMode>posix</tarLongFileMode>
         </configuration>
         <executions>
           <execution>
@@ -64,6 +62,15 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <!-- skip deploying this artifact, since this module is used for generating an uber package-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>${maven-deploy-plugin.version}</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
       </plugin>
     </plugins>
   </build>
