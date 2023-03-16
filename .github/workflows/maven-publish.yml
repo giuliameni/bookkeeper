@@ -27,6 +27,8 @@ jobs:
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
     - name: Build with Mave
-      run:  mvn clean verify -DskipTests -Dcheckstyle.skip
+      run: |
+        cd bookkeeper-common
+        mvn clean verify -DskipTests -Dcheckstyle.skip
 
 
