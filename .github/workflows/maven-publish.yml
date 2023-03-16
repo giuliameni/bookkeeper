@@ -29,6 +29,6 @@ jobs:
     - name: Build with Maven
       run: |
         cd bookkeeper-server 
-        mvn clean verify -DskipTests
+        mvn clean verify -DskipTests -Dcheckstyle.skip
 
 
