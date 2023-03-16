@@ -18,35 +18,35 @@
  * under the License.
  *
  */
+package org.apache.bookkeeper.http.twitter;
 
-package org.apache.bookkeeper.http.vertx;
-
-import io.vertx.ext.web.RoutingContext;
-
+import com.twitter.finagle.http.Request;
+import com.twitter.finagle.http.Response;
+import com.twitter.util.Future;
 import org.apache.bookkeeper.http.AbstractHttpHandlerFactory;
 import org.apache.bookkeeper.http.HttpServer;
 import org.apache.bookkeeper.http.HttpServiceProvider;
 import org.apache.bookkeeper.http.service.HttpEndpointService;
 
+
 /**
- * Factory which provide http handlers for Vertx based Http Server.
+ * Factory which provide http handlers for TwitterServer based Http Server.
  */
-public class VertxHttpHandlerFactory extends AbstractHttpHandlerFactory<VertxAbstractHandler> {
+public class TwitterHttpHandlerFactory extends AbstractHttpHandlerFactory<TwitterAbstractHandler> {
 
-
-    public VertxHttpHandlerFactory(HttpServiceProvider httpServiceProvider) {
+    public TwitterHttpHandlerFactory(HttpServiceProvider httpServiceProvider) {
         super(httpServiceProvider);
     }
 
+
     @Override
-    public VertxAbstractHandler newHandler(HttpServer.ApiType type) {
-        return new VertxAbstractHandler() {
+    public TwitterAbstractHandler newHandler(HttpServer.ApiType type) {
+        return new TwitterAbstractHandler() {
             @Override
-            public void handle(RoutingContext context) {
+            public Future<Response> apply(Request request) {
                 HttpEndpointService service = getHttpServiceProvider().provideHttpEndpointService(type);
-                processRequest(service, context);
+                return processRequest(service, request);
             }
         };
     }
-
 }

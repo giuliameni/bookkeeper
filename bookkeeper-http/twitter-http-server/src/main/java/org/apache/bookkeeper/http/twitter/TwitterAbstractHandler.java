@@ -18,15 +18,14 @@
  * under the License.
  *
  */
-package org.apache.bookkeeper.http.vertx;
+package org.apache.bookkeeper.http.twitter;
 
-import io.vertx.core.Handler;
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.web.RoutingContext;
+import com.twitter.finagle.Service;
+import com.twitter.finagle.http.Request;
+import com.twitter.finagle.http.Response;
+import com.twitter.util.Future;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.bookkeeper.http.HttpServer;
@@ -36,39 +35,37 @@ import org.apache.bookkeeper.http.service.HttpServiceRequest;
 import org.apache.bookkeeper.http.service.HttpServiceResponse;
 
 /**
- * Http Handler for Vertx based Http Server.
+ * Http handler for TwitterServer.
  */
-public abstract class VertxAbstractHandler implements Handler<RoutingContext> {
+public abstract class TwitterAbstractHandler extends Service<Request, Response> {
 
     /**
      * Process the request using the given httpEndpointService.
      */
-    void processRequest(HttpEndpointService httpEndpointService, RoutingContext context) {
-        HttpServerRequest httpRequest = context.request();
-        HttpServerResponse httpResponse = context.response();
-        HttpServiceRequest request = new HttpServiceRequest()
-            .setMethod(convertMethod(httpRequest))
-            .setParams(convertParams(httpRequest))
-            .setBody(context.getBodyAsString());
-        HttpServiceResponse response = null;
+    Future<Response> processRequest(HttpEndpointService httpEndpointService, Request request) {
+        HttpServiceRequest httpServiceRequest = new HttpServiceRequest()
+            .setMethod(convertMethod(request))
+            .setParams(convertParams(request))
+            .setBody(request.contentString());
+        HttpServiceResponse httpServiceResponse = null;
         try {
-            response = httpEndpointService.handle(request);
+            httpServiceResponse = httpEndpointService.handle(httpServiceRequest);
         } catch (Exception e) {
-            response = new ErrorHttpService().handle(request);
+            httpServiceResponse = new ErrorHttpService().handle(httpServiceRequest);
         }
-        httpResponse.setStatusCode(response.getStatusCode());
-        httpResponse.end(response.getBody());
+        Response response = Response.apply();
+        response.setContentString(httpServiceResponse.getBody());
+        response.statusCode(httpServiceResponse.getStatusCode());
+        return Future.value(response);
     }
 
     /**
-     * Convert http request parameters to a map.
+     * Convert http request parameters to Map.
      */
     @SuppressWarnings("unchecked")
-    Map<String, String> convertParams(HttpServerRequest request) {
+    Map<String, String> convertParams(Request request) {
         Map<String, String> map = new HashMap<>();
-        Iterator<Map.Entry<String, String>> iterator = request.params().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, String> entry = iterator.next();
+        for (Map.Entry<String, String> entry : request.getParams()) {
             map.put(entry.getKey(), entry.getValue());
         }
         return map;
@@ -78,13 +75,13 @@ public abstract class VertxAbstractHandler implements Handler<RoutingContext> {
      * Convert http request method to the method that
      * can be recognized by HttpServer.
      */
-    HttpServer.Method convertMethod(HttpServerRequest request) {
-        switch (request.method()) {
-            case POST:
+    HttpServer.Method convertMethod(Request request) {
+        switch (request.method().name()) {
+            case "POST":
                 return HttpServer.Method.POST;
-            case DELETE:
+            case "DELETE":
                 return HttpServer.Method.DELETE;
-            case PUT:
+            case "PUT":
                 return HttpServer.Method.PUT;
             default:
                 return HttpServer.Method.GET;
