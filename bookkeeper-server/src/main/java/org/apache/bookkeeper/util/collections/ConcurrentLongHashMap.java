@@ -23,17 +23,19 @@ package org.apache.bookkeeper.util.collections;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.LongFunction;
+
+import com.google.common.collect.Lists;
+
 /**
  * Map from long to an Object.
- *
- * <p>Provides similar methods as a {@code ConcurrentMap<long,Object>} with 2 differences:
+ * 
+ * Provides similar methods as a ConcurrentMap<long,Object> with 2 differences:
  * <ol>
- * <li>No boxing/unboxing from long -&gt; Long
+ * <li>No boxing/unboxing from long -> Long
  * <li>Open hash map with linear probing, no node allocations to store the values
  * </ol>
  *
@@ -45,123 +47,33 @@ public class ConcurrentLongHashMap<V> {
     private static final Object EmptyValue = null;
     private static final Object DeletedValue = new Object();
 
+    private static final float MapFillFactor = 0.66f;
+
     private static final int DefaultExpectedItems = 256;
     private static final int DefaultConcurrencyLevel = 16;
 
-    private static final float DefaultMapFillFactor = 0.66f;
-    private static final float DefaultMapIdleFactor = 0.15f;
-
-    private static final float DefaultExpandFactor = 2;
-    private static final float DefaultShrinkFactor = 2;
-
-    private static final boolean DefaultAutoShrink = false;
-
-
-    public static <V> Builder<V> newBuilder() {
-        return new Builder<>();
-    }
-
-    /**
-     * Builder of ConcurrentLongHashMap.
-     */
-    public static class Builder<T> {
-        int expectedItems = DefaultExpectedItems;
-        int concurrencyLevel = DefaultConcurrencyLevel;
-        float mapFillFactor = DefaultMapFillFactor;
-        float mapIdleFactor = DefaultMapIdleFactor;
-        float expandFactor = DefaultExpandFactor;
-        float shrinkFactor = DefaultShrinkFactor;
-        boolean autoShrink = DefaultAutoShrink;
-
-        public Builder<T> expectedItems(int expectedItems) {
-            this.expectedItems = expectedItems;
-            return this;
-        }
-
-        public Builder<T> concurrencyLevel(int concurrencyLevel) {
-            this.concurrencyLevel = concurrencyLevel;
-            return this;
-        }
-
-        public Builder<T> mapFillFactor(float mapFillFactor) {
-            this.mapFillFactor = mapFillFactor;
-            return this;
-        }
-
-        public Builder<T> mapIdleFactor(float mapIdleFactor) {
-            this.mapIdleFactor = mapIdleFactor;
-            return this;
-        }
-
-        public Builder<T> expandFactor(float expandFactor) {
-            this.expandFactor = expandFactor;
-            return this;
-        }
-
-        public Builder<T> shrinkFactor(float shrinkFactor) {
-            this.shrinkFactor = shrinkFactor;
-            return this;
-        }
-
-        public Builder<T> autoShrink(boolean autoShrink) {
-            this.autoShrink = autoShrink;
-            return this;
-        }
-
-        public ConcurrentLongHashMap<T> build() {
-            return new ConcurrentLongHashMap<>(expectedItems, concurrencyLevel,
-                    mapFillFactor, mapIdleFactor, autoShrink, expandFactor, shrinkFactor);
-        }
-    }
-
-
-    /**
-     * Predicate specialization for (long, V) types.
-     *
-     * @param <V>
-     */
-    public interface LongObjectPredicate<V> {
-        boolean test(long key, V value);
-    }
-
     private final Section<V>[] sections;
 
-    @Deprecated
     public ConcurrentLongHashMap() {
         this(DefaultExpectedItems);
     }
 
-    @Deprecated
     public ConcurrentLongHashMap(int expectedItems) {
         this(expectedItems, DefaultConcurrencyLevel);
     }
 
-    @Deprecated
     public ConcurrentLongHashMap(int expectedItems, int concurrencyLevel) {
-        this(expectedItems, concurrencyLevel, DefaultMapFillFactor, DefaultMapIdleFactor,
-                DefaultAutoShrink, DefaultExpandFactor, DefaultShrinkFactor);
-    }
-
-    public ConcurrentLongHashMap(int expectedItems, int concurrencyLevel,
-                                 float mapFillFactor, float mapIdleFactor,
-                                 boolean autoShrink, float expandFactor, float shrinkFactor) {
         checkArgument(expectedItems > 0);
         checkArgument(concurrencyLevel > 0);
         checkArgument(expectedItems >= concurrencyLevel);
-        checkArgument(mapFillFactor > 0 && mapFillFactor < 1);
-        checkArgument(mapIdleFactor > 0 && mapIdleFactor < 1);
-        checkArgument(mapFillFactor > mapIdleFactor);
-        checkArgument(expandFactor > 1);
-        checkArgument(shrinkFactor > 1);
 
         int numSections = concurrencyLevel;
         int perSectionExpectedItems = expectedItems / numSections;
-        int perSectionCapacity = (int) (perSectionExpectedItems / mapFillFactor);
+        int perSectionCapacity = (int) (perSectionExpectedItems / MapFillFactor);
         this.sections = (Section<V>[]) new Section[numSections];
 
         for (int i = 0; i < numSections; i++) {
-            sections[i] = new Section<>(perSectionCapacity, mapFillFactor, mapIdleFactor,
-                    autoShrink, expandFactor, shrinkFactor);
+            sections[i] = new Section<>(perSectionCapacity);
         }
     }
 
@@ -237,17 +149,6 @@ public class ConcurrentLongHashMap<V> {
         return getSection(h).remove(key, value, (int) h) != null;
     }
 
-    public int removeIf(LongObjectPredicate<V> predicate) {
-        checkNotNull(predicate);
-
-        int removedCount = 0;
-        for (Section<V> s : sections) {
-            removedCount += s.removeIf(predicate);
-        }
-
-        return removedCount;
-    }
-
     private Section<V> getSection(long hash) {
         // Use 32 msb out of long to get the section
         final int sectionIdx = (int) (hash >>> 32) & (sections.length - 1);
@@ -275,55 +176,34 @@ public class ConcurrentLongHashMap<V> {
         return keys;
     }
 
-    /**
-     * @return a new list of all keys (makes a copy)
-     */
-    public List<V> values() {
+    List<V> values() {
         List<V> values = Lists.newArrayListWithExpectedSize((int) size());
         forEach((key, value) -> values.add(value));
         return values;
     }
 
-    /**
-     * An entry processor.
-     */
-    public interface EntryProcessor<V> {
+    public static interface EntryProcessor<V> {
         void accept(long key, V value);
     }
 
     // A section is a portion of the hash map that is covered by a single
     @SuppressWarnings("serial")
     private static final class Section<V> extends StampedLock {
-        private volatile long[] keys;
-        private volatile V[] values;
+        private long[] keys;
+        private V[] values;
 
-        private volatile int capacity;
-        private final int initCapacity;
+        private int capacity;
         private volatile int size;
         private int usedBuckets;
-        private int resizeThresholdUp;
-        private int resizeThresholdBelow;
-        private final float mapFillFactor;
-        private final float mapIdleFactor;
-        private final float expandFactor;
-        private final float shrinkFactor;
-        private final boolean autoShrink;
+        private int resizeThreshold;
 
-        Section(int capacity, float mapFillFactor, float mapIdleFactor, boolean autoShrink,
-                float expandFactor, float shrinkFactor) {
+        Section(int capacity) {
             this.capacity = alignToPowerOfTwo(capacity);
-            this.initCapacity = this.capacity;
             this.keys = new long[this.capacity];
             this.values = (V[]) new Object[this.capacity];
             this.size = 0;
             this.usedBuckets = 0;
-            this.autoShrink = autoShrink;
-            this.mapFillFactor = mapFillFactor;
-            this.mapIdleFactor = mapIdleFactor;
-            this.expandFactor = expandFactor;
-            this.shrinkFactor = shrinkFactor;
-            this.resizeThresholdUp = (int) (this.capacity * mapFillFactor);
-            this.resizeThresholdBelow = (int) (this.capacity * mapIdleFactor);
+            this.resizeThreshold = (int) (this.capacity * MapFillFactor);
         }
 
         V get(long key, int keyHash) {
@@ -437,28 +317,15 @@ public class ConcurrentLongHashMap<V> {
                     ++bucket;
                 }
             } finally {
-                if (usedBuckets > resizeThresholdUp) {
+                if (usedBuckets > resizeThreshold) {
                     try {
-                        int newCapacity = alignToPowerOfTwo((int) (capacity * expandFactor));
-                        rehash(newCapacity);
+                        rehash();
                     } finally {
                         unlockWrite(stamp);
                     }
                 } else {
                     unlockWrite(stamp);
                 }
-            }
-        }
-
-        private void cleanDeletedStatus(int startBucket) {
-            // Cleanup all the buckets that were in `DeletedValue` state,
-            // so that we can reduce unnecessary expansions
-            int lastBucket = signSafeMod(startBucket - 1, capacity);
-            while (values[lastBucket] == DeletedValue) {
-                values[lastBucket] = (V) EmptyValue;
-                --usedBuckets;
-
-                lastBucket = signSafeMod(--lastBucket, capacity);
             }
         }
 
@@ -484,8 +351,6 @@ public class ConcurrentLongHashMap<V> {
                             if (nextValueInArray == EmptyValue) {
                                 values[bucket] = (V) EmptyValue;
                                 --usedBuckets;
-
-                                cleanDeletedStatus(bucket);
                             } else {
                                 values[bucket] = (V) DeletedValue;
                             }
@@ -503,77 +368,7 @@ public class ConcurrentLongHashMap<V> {
                 }
 
             } finally {
-                if (autoShrink && size < resizeThresholdBelow) {
-                    try {
-                        // Shrinking must at least ensure initCapacity,
-                        // so as to avoid frequent shrinking and expansion near initCapacity,
-                        // frequent shrinking and expansion,
-                        // additionally opened arrays will consume more memory and affect GC
-                        int newCapacity = Math.max(alignToPowerOfTwo((int) (capacity / shrinkFactor)), initCapacity);
-                        int newResizeThresholdUp = (int) (newCapacity * mapFillFactor);
-                        if (newCapacity < capacity && newResizeThresholdUp > size) {
-                            // shrink the hashmap
-                            rehash(newCapacity);
-                        }
-                    } finally {
-                        unlockWrite(stamp);
-                    }
-                } else {
-                    unlockWrite(stamp);
-                }
-            }
-        }
-
-        int removeIf(LongObjectPredicate<V> filter) {
-            long stamp = writeLock();
-
-            int removedCount = 0;
-            try {
-                // Go through all the buckets for this section
-                int capacity = this.capacity;
-                for (int bucket = 0; size > 0 && bucket < capacity; bucket++) {
-                    long storedKey = keys[bucket];
-                    V storedValue = values[bucket];
-
-                    if (storedValue != EmptyValue && storedValue != DeletedValue) {
-                        if (filter.test(storedKey, storedValue)) {
-                            // Removing item
-                            --size;
-                            ++removedCount;
-
-                            V nextValueInArray = values[signSafeMod(bucket + 1, capacity)];
-                            if (nextValueInArray == EmptyValue) {
-                                values[bucket] = (V) EmptyValue;
-                                --usedBuckets;
-
-                                cleanDeletedStatus(bucket);
-                            } else {
-                                values[bucket] = (V) DeletedValue;
-                            }
-                        }
-                    }
-                }
-
-                return removedCount;
-            } finally {
-                if (autoShrink && size < resizeThresholdBelow) {
-                    try {
-                        // Shrinking must at least ensure initCapacity,
-                        // so as to avoid frequent shrinking and expansion near initCapacity,
-                        // frequent shrinking and expansion,
-                        // additionally opened arrays will consume more memory and affect GC
-                        int newCapacity = Math.max(alignToPowerOfTwo((int) (capacity / shrinkFactor)), initCapacity);
-                        int newResizeThresholdUp = (int) (newCapacity * mapFillFactor);
-                        if (newCapacity < capacity && newResizeThresholdUp > size) {
-                            // shrink the hashmap
-                            rehash(newCapacity);
-                        }
-                    } finally {
-                        unlockWrite(stamp);
-                    }
-                } else {
-                    unlockWrite(stamp);
-                }
+                unlockWrite(stamp);
             }
         }
 
@@ -581,14 +376,10 @@ public class ConcurrentLongHashMap<V> {
             long stamp = writeLock();
 
             try {
-                if (autoShrink && capacity > initCapacity) {
-                    shrinkToInitCapacity();
-                } else {
-                    Arrays.fill(keys, 0);
-                    Arrays.fill(values, EmptyValue);
-                    this.size = 0;
-                    this.usedBuckets = 0;
-                }
+                Arrays.fill(keys, 0);
+                Arrays.fill(values, EmptyValue);
+                this.size = 0;
+                this.usedBuckets = 0;
             } finally {
                 unlockWrite(stamp);
             }
@@ -641,8 +432,9 @@ public class ConcurrentLongHashMap<V> {
             }
         }
 
-        private void rehash(int newCapacity) {
+        private void rehash() {
             // Expand the hashmap
+            int newCapacity = capacity * 2;
             long[] newKeys = new long[newCapacity];
             V[] newValues = (V[]) new Object[newCapacity];
 
@@ -655,29 +447,11 @@ public class ConcurrentLongHashMap<V> {
                 }
             }
 
+            capacity = newCapacity;
             keys = newKeys;
             values = newValues;
             usedBuckets = size;
-            // Capacity needs to be updated after the values, so that we won't see
-            // a capacity value bigger than the actual array size
-            capacity = newCapacity;
-            resizeThresholdUp = (int) (capacity * mapFillFactor);
-            resizeThresholdBelow = (int) (capacity * mapIdleFactor);
-        }
-
-        private void shrinkToInitCapacity() {
-            long[] newKeys = new long[initCapacity];
-            V[] newValues = (V[]) new Object[initCapacity];
-
-            keys = newKeys;
-            values = newValues;
-            size = 0;
-            usedBuckets = 0;
-            // Capacity needs to be updated after the values, so that we won't see
-            // a capacity value bigger than the actual array size
-            capacity = initCapacity;
-            resizeThresholdUp = (int) (capacity * mapFillFactor);
-            resizeThresholdBelow = (int) (capacity * mapIdleFactor);
+            resizeThreshold = (int) (capacity * MapFillFactor);
         }
 
         private static <V> void insertKeyValueNoLock(long[] keys, V[] values, long key, V value) {
@@ -710,11 +484,11 @@ public class ConcurrentLongHashMap<V> {
         return hash;
     }
 
-    static final int signSafeMod(long n, int max) {
-        return (int) n & (max - 1);
+    static final int signSafeMod(long n, int Max) {
+        return (int) n & (Max - 1);
     }
 
-    private static int alignToPowerOfTwo(int n) {
+    private static final int alignToPowerOfTwo(int n) {
         return (int) Math.pow(2, 32 - Integer.numberOfLeadingZeros(n - 1));
     }
 }

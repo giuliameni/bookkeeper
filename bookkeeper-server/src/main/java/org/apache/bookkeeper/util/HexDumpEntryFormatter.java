@@ -22,11 +22,9 @@
 package org.apache.bookkeeper.util;
 
 import java.io.IOException;
+
 import org.apache.commons.io.HexDump;
 
-/**
- * A hex dump entry formatter.
- */
 public class HexDumpEntryFormatter extends EntryFormatter {
     @Override
     public void formatEntry(byte[] data) {

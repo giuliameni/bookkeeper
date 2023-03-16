@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,15 +19,12 @@ package org.apache.bookkeeper.util;
 
 import java.util.function.Consumer;
 
-/**
- * A SafeRunnable implementation.
- */
 public abstract class SafeRunnable implements org.apache.bookkeeper.common.util.SafeRunnable {
 
     /**
-     * Utility method to use SafeRunnable from lambdas.
-     *
-     * <p>Eg:
+     * Utility method to use SafeRunnable from lambdas
+     * <p>
+     * Eg:
      * <pre>
      * <code>
      * executor.submit(SafeRunnable.safeRun(() -> {
@@ -47,9 +44,9 @@ public abstract class SafeRunnable implements org.apache.bookkeeper.common.util.
 
     /**
      * Utility method to use SafeRunnable from lambdas with
-     * a custom exception handler.
-     *
-     * <p>Eg:
+     * a custom exception handler
+     * <p>
+     * Eg:
      * <pre>
      * <code>
      * executor.submit(SafeRunnable.safeRun(() -> {

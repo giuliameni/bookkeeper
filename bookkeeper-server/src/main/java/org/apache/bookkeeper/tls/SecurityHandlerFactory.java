@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,31 +17,19 @@
  */
 package org.apache.bookkeeper.tls;
 
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.handler.ssl.SslHandler;
 import org.apache.bookkeeper.conf.AbstractConfiguration;
 
-/**
- * A factory to manage the security handlers.
- */
-public interface SecurityHandlerFactory {
+import io.netty.handler.ssl.SslHandler;
 
-    /**
-     * The security handler type.
-     */
-    enum NodeType {
+public interface SecurityHandlerFactory {
+    public enum NodeType {
         Unknown,
         Client,
         Server,
     }
 
-    String getHandlerName();
+    public abstract String getHandlerName();
 
-    void init(NodeType type, AbstractConfiguration conf, ByteBufAllocator allocator) throws SecurityException;
-
-    SslHandler newTLSHandler();
-
-    default SslHandler newTLSHandler(String host, int port) {
-        return this.newTLSHandler();
-    }
+    public abstract void init(NodeType type, AbstractConfiguration conf) throws SecurityException;
+    public SslHandler newTLSHandler();
 }
