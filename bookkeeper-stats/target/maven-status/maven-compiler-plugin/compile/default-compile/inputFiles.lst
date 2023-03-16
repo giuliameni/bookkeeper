@@ -1,0 +1,12 @@
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/Counter.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/StatsLogger.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/package-info.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/CachingStatsLogger.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/OpStatsLogger.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/Stats.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/NullStatsProvider.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/Gauge.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/NullStatsLogger.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/StatsProvider.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/OpStatsData.java
+/Users/giuliamenichini/Documents/bookkeeper/bookkeeper-stats/src/main/java/org/apache/bookkeeper/stats/CachingStatsProvider.java
