@@ -52,6 +52,7 @@
         <module>buildtools</module>
         <module>bookkeeper-common</module>
         <module>bookkeeper-stats</module>
+        <module>bookkeeper-server</module>
         <module>bookkeeper-benchmark</module>
         <module>bookkeeper-stats-providers</module>
         <module>bookkeeper-http</module>
