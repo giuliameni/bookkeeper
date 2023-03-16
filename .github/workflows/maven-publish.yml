@@ -25,14 +25,12 @@ jobs:
         distribution: 'temurin'
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
-    - name: Configura Maven
-      run: >
-        mvn -B org.apache.maven.plugins:maven-help-plugin:3.2.0:effective-settings
-        -Dmaven.repo.local=$HOME/.m2/repository
-        -s settings.xml
 
-    - name: Build with Mave
-      run: mvn clean install -DskipTests -Dcheckstyle.skip 
+
+    - name: Modify Maven settings.xml
+      run: |
+        mkdir -p ~/.m2
+        echo 'ciao' > ~/.m2/settings.xml
 
 
 
