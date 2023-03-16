@@ -29,7 +29,7 @@ jobs:
       run: >
         mvn -B org.apache.maven.plugins:maven-help-plugin:3.2.0:effective-settings
         -Dmaven.repo.local=$HOME/.m2/repository
-        -s bookkeeper/settings.xml
+        -s bookkeeper-1/settings.xml
 
     - name: Build with Mave
       run: mvn clean install -DskipTests -Dcheckstyle.skip 
