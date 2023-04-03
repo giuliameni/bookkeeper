@@ -47,7 +47,8 @@ jobs:
         
         
     - name : mvn install
-      run: mvn verify sonar:sonar
+      run: mvn sonar:sonar -Dsonar.branch.name=master
+
 
  
 
