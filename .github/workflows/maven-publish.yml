@@ -46,20 +46,8 @@ jobs:
           ' > ~/.m2/settings.xml
         
         
-        
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Read settings.xml
-      run: |
-       cat ~/.m2/settings.xml
-
-    - name: Build and analyze
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=giulia97-w_bookkeeper-1
-
+    - name : mvn install
+      run: mvn clean verify
 
 
  
