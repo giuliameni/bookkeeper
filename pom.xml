@@ -91,6 +91,7 @@
         </developer>
     </developers>
     <properties>
+        <sonar.branch.name>main</sonar.branch.name>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
         <sonar.organization>giulia97-w</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
