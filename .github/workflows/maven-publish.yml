@@ -47,7 +47,7 @@ jobs:
         
         
     - name : mvn install
-      run: mvn clean verify
+      run: mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=giulia97-w_bookkeeper-1
 
 
  
