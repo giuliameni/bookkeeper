@@ -47,7 +47,7 @@ jobs:
         
         
     - name : mvn install
-      run: mvn verify 
+      run: mvn verify sonar:sonar
 
  
 
