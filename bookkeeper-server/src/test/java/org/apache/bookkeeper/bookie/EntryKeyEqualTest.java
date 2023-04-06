@@ -41,3 +41,7 @@ public class EntryKeyEqualTest {
         assertFalse(key1.equals(key3));
     }
 }
+
+/*key1 e key2 hanno lo stesso ledgerId e lo stesso entryId, mentre key3 ha lo stesso ledgerId ma un diverso entryId.
+key1 e key3 hanno lo stesso entryId ma diversi ledgerId, mentre key2 ha lo stesso ledgerId di key1 e lo stesso entryId di key3.
+key1 e key2 hanno lo stesso ledgerId ma diversi entryId, mentre key3 ha un diverso ledgerId e un diverso entryId.*/

@@ -25,9 +25,12 @@ public class EntryKeyHashTest {
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {new EntryKey(123, 456), new EntryKey(123, 456), new EntryKey(123, 789)},
-                {new EntryKey(456, 789), new EntryKey(456, 789), new EntryKey(456, 123)},
-                {new EntryKey(789, 123), new EntryKey(789, 123), new EntryKey(789, 456)}
+                {new EntryKey(0, 0), new EntryKey(0, 0), new EntryKey(0, 1)},
+                {new EntryKey(Integer.MAX_VALUE, 0), new EntryKey(Integer.MAX_VALUE, 0), new EntryKey(Integer.MIN_VALUE, 1)},
+                {new EntryKey(Integer.MIN_VALUE, Integer.MAX_VALUE), new EntryKey(Integer.MIN_VALUE, Integer.MAX_VALUE), new EntryKey(Integer.MAX_VALUE, Integer.MIN_VALUE)},
+                {new EntryKey(1, 2), new EntryKey(1, 2), new EntryKey(1, 3)},
+                {new EntryKey(2, 3), new EntryKey(2, 3), new EntryKey(3, 1)},
+                {new EntryKey(3, 1), new EntryKey(3, 1), new EntryKey(2, 2)}
         });
     }
 
@@ -41,3 +44,9 @@ public class EntryKeyHashTest {
         assertNotEquals(key1.hashCode(), key3.hashCode());
     }
 }
+
+/*Nel test di testEquals(), ho utilizzato due oggetti con gli stessi valori per ledgerId e entryId, e un oggetto con un valore diverso per entryId, in modo da verificare se il metodo equals() funziona correttamente confrontando solo i valori di ledgerId e entryId.
+
+Nel test di testHashCode(), ho utilizzato gli stessi oggetti utilizzati in testEquals(), in modo da verificare se gli oggetti con gli stessi valori di ledgerId e entryId restituiscono lo stesso hashCode.
+
+Inoltre, ho aggiunto alcuni parametri che verificano la corretta gestione del comparatore in situazioni limite, ad esempio quando i valori di ledgerId e entryId sono uguali ma in ordine diverso o quando i valori sono troppo grandi o troppo piccoli da gestire in modo corretto.*/

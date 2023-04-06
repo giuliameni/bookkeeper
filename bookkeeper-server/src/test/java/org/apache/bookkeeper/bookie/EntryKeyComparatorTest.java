@@ -3,6 +3,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.Assert;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,5 +49,12 @@ public class EntryKeyComparatorTest {
         assertTrue(comparator.compare(key3, key4) < 0);
         assertTrue(comparator.compare(key4, key3) > 0);
         assertTrue(comparator.compare(key4, key5) == 0);
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        EntryKey key = new EntryKey();
+        Assert.assertEquals("Ledger ID should be 0", 0L, key.getLedgerId());
+        Assert.assertEquals("Entry ID should be 0", 0L, key.getEntryId());
     }
 }
