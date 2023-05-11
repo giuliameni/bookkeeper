@@ -33,10 +33,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Ledger entries implementation. It is a simple wrap of a list of ledger entries.
  */
 public class LedgerEntriesImpl implements LedgerEntries {
-    private List<LedgerEntry> entries;
+    public List<LedgerEntry> entries;
     private final Recycler.Handle<LedgerEntriesImpl> recyclerHandle;
 
-    private LedgerEntriesImpl(Recycler.Handle<LedgerEntriesImpl> recyclerHandle) {
+    public LedgerEntriesImpl(Recycler.Handle<LedgerEntriesImpl> recyclerHandle) {
         this.recyclerHandle = recyclerHandle;
     }
 
