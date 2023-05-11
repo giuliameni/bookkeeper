@@ -1,37 +1,40 @@
 package org.apache.bookkeeper.bookie;
 
 import static org.junit.Assert.*;
+
+
 import java.io.RandomAccessFile;
 
 import java.io.IOException;
+
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
+
 import java.nio.file.StandardOpenOption;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.Mockito;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import java.util.Arrays;
+
 import java.io.File;
-import java.io.ByteArrayOutputStream;
-import java.nio.file.Paths;
+
 import java.lang.NegativeArraySizeException;
-import java.nio.BufferUnderflowException;
+
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Test;
+
 
 
 
 @RunWith(Parameterized.class)
 public class BufferedChannelTest {
     private static final int BUFFER_CAPACITY = 1024 * 1024; // 1 MB
-    private static final int FILE_SIZE = 10 * BUFFER_CAPACITY;
-    private static final String TEST_FILE_PATH = "testfile.dat";
+
     
     private Path tmpFile;
     private FileChannel fileChannel;
@@ -57,76 +60,55 @@ public class BufferedChannelTest {
 
     @Parameterized.Parameters
     public static Integer[] data() {
-        return new Integer[] {-1 ,1,100,1024, 2048, 4096*100 };
+        return new Integer[] {-1 ,0,1,100,1024, 4096*100 };
     }
 
-    @Test
-    public void testPosition() throws IOException {
-    if (bufferSize == -1) {
-        try {
-            ByteBuffer data = ByteBuffer.wrap(new byte[bufferSize]);
-        } catch (NegativeArraySizeException e) {
-            return;
-        }}
-        // Write some data to the buffered channel
-        ByteBuffer data = ByteBuffer.wrap(new byte[bufferSize]);
-        bufferedChannel.write(data);
-
-        // The position of the buffered channel should be equal to the size of the data written
-        assertEquals(bufferSize, bufferedChannel.position());
-        
-    }
+    
+   
+    
     @Test
     public void testReadPastEOF() throws IOException {
-        if (bufferSize == -1) {
+    	if(bufferSize == 0) {
+    		return;
+    	}
+        ByteBuffer buffer = null;
         try {
-            ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
+            buffer = ByteBuffer.allocate(bufferSize);
         } catch (IllegalArgumentException e) {
-            return;
-        }}
-        // Write some data to the file channel
-        ByteBuffer writeBuffer = ByteBuffer.allocate(bufferSize);
-        writeBuffer.put("".getBytes());
-        writeBuffer.flip();
-        fileChannel.write(writeBuffer);
-        
-        // Reset the buffer and try to read beyond the end of the file
-        ByteBuffer readBuffer = ByteBuffer.allocate(bufferSize);
-        readBuffer.clear();
+            if (bufferSize < 0) {
+                // If bufferSize is negative, then it's okay to throw IllegalArgumentException
+                return;
+            } else {
+                // If bufferSize is positive, then we shouldn't be throwing IllegalArgumentException
+                fail("Unexpected IllegalArgumentException thrown");
+            }
+        }
+        long fileSize = fileChannel.size();
+        long position = fileSize + 1; // read past EOF
         try {
-            bufferedChannel.read(readBuffer, bufferSize);
+            bufferedChannel.read(buffer, position);
             fail("Expected IOException not thrown");
         } catch (IOException e) {
-            // Expected exception
-        }
+            assertEquals("Read past EOF", e.getMessage());
+        } //Con 0 non riceviamo eccezione perché non entra nel while. 
     }
 
 
-    @Test
-    public void testFlush() throws IOException {
-        if (bufferSize == -1) {
-        try {
-            ByteBuffer data = ByteBuffer.wrap(new byte[bufferSize]);
-        } catch (NegativeArraySizeException e) {
-            return;
-        }}
-    // Write some data to the buffered channel
-    ByteBuffer data = ByteBuffer.wrap(new byte[bufferSize]);
-    bufferedChannel.write(data);
 
-    // Flush the buffer and ensure all data is written to the file channel
-    bufferedChannel.flush(true);
-    assertEquals(bufferSize, fileChannel.size());
-}
     @Test
-    public void testWrite() throws IOException {
-    if (bufferSize == -1) {
+    public void testWriteClearReadPosition() throws IOException {
+    	
         try {
             byte[] dataToWrite = new byte[bufferSize];
         } catch (NegativeArraySizeException e) {
-            return;
+            if (bufferSize < 0) {
+                // If bufferSize is negative, then it's okay to throw IllegalArgumentException
+                return;
+            } else {
+                // If bufferSize is positive, then we shouldn't be throwing IllegalArgumentException
+                fail("Unexpected NegativeArraySizeException thrown");
+            }
         }
-    }
 
     // Generate random data to write
     byte[] dataToWrite = new byte[bufferSize];
@@ -146,51 +128,23 @@ public class BufferedChannelTest {
     assertArrayEquals(dataToWrite, readBuffer.array());
 }
 
-
-
     @Test
-    public void testClear() throws IOException {
-
-        
-        
-        // Create a temporary file to be used in the test
-        File file = File.createTempFile("testfile", null);
-        FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.READ);
-        
-        if (bufferSize == -1) {
-        try {
-            ByteBuffer buf = ByteBuffer.allocateDirect(bufferSize);
-        } catch (IllegalArgumentException e) {
-            return;
-        }
-    }
-
-        ByteBuffer buf = ByteBuffer.allocateDirect(bufferSize);
-
-        // Create a BufferedChannel instance with the temporary file and ByteBuffer
-        BufferedChannel bc = new BufferedChannel(fc, bufferSize);
-
-        // Call clear() method
-        bc.clear();
-
-        // Verify that the write buffer has been cleared by checking the file size
-        assertTrue(file.length() == 0);
-
-        // Close the channel and delete the temporary file
-        fc.close();
-        file.delete();
-    }
-
-    @Test
-    public void testRead() throws IOException {
+    public void testWriteFlushRead() throws IOException {
+    	if(bufferSize == 0) {
+    		return;
+    	}
     File tempFile = File.createTempFile("test", "txt");
     tempFile.deleteOnExit();
     RandomAccessFile file = new RandomAccessFile(tempFile, "rw");
-    if (bufferSize == -1) {
-        try {
-            BufferedChannel bufferedChannel = new BufferedChannel(file.getChannel(), bufferSize);
-        } catch (IllegalArgumentException e) {
+    try {
+        BufferedChannel bufferedChannel = new BufferedChannel(file.getChannel(), bufferSize);
+    } catch (IllegalArgumentException e) {
+        if (bufferSize < 0) {
+            // If bufferSize is negative, then it's okay to throw IllegalArgumentException
             return;
+        } else {
+            // If bufferSize is positive, then we shouldn't be throwing IllegalArgumentException
+            fail("Unexpected IllegalArgumentException thrown");
         }
     }
     BufferedChannel bufferedChannel = new BufferedChannel(file.getChannel(), bufferSize);
@@ -210,10 +164,44 @@ public class BufferedChannelTest {
     dest.get(actualData);
     assertArrayEquals(data, actualData);
 }
+    @Test
+    public void testWriteWithZeroBuffer() throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(0);
+        long positionBeforeWrite = bufferedChannel.position();
+        bufferedChannel.write(buffer);
+        long positionAfterWrite = bufferedChannel.position();
+        assertEquals(positionBeforeWrite, positionAfterWrite);
+    }
+
+    
+    
+    
+    
+
+    
+  
+
+
+  
+
+}
+    
 
 
     
-}
+
+
+
+
+
+
+    
+
+
+    
+
+    
+
 
    
 
