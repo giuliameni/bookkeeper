@@ -54,6 +54,13 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=giulia97-w_bookkeeper-1
 
+      - name: Save Jacoco and Pit Reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: Jacoco and Pit Reports
+          path: |
+            target/site/jacoco/jacoco.xml
+            target/pit-reports
 
       
 
