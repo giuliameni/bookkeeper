@@ -59,8 +59,8 @@ jobs:
         with:
           name: Jacoco and Pit Reports
           path: |
-            target/site/jacoco/jacoco.xml
-            target/pit-reports
+            bookkeeper-server/target/site/jacoco/jacoco.xml
+            bookkeeper-server/target/pit-reports
 
       
 
