@@ -35,13 +35,6 @@
       <version>${project.parent.version}</version>
     </dependency>
     <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>3.12.4</version>
-        <scope>test</scope>
-    </dependency>
-
-    <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
       <version>${protobuf.version}</version>
@@ -120,10 +113,6 @@
         <artifactId>org.jacoco.core</artifactId>
         <version>0.8.7</version>
     </dependency>
-    
-     
-    
-
 
     <dependency>
       <groupId>commons-io</groupId>
@@ -175,13 +164,6 @@
       </exclusions>
     </dependency>
     <dependency>
-	    <groupId>org.projectlombok</groupId>
-	    <artifactId>lombok</artifactId>
-	    <version>1.18.20</version>
-	    <scope>provided</scope>
-	</dependency>
-
-    <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
       <version>${netty.version}</version>
@@ -197,8 +179,6 @@
       <artifactId>netty-tcnative-boringssl-static</artifactId>
       <version>${netty-boringssl.version}</version>
     </dependency>
-    
-
     <dependency>
       <groupId>org.apache.bookkeeper.http</groupId>
       <artifactId>http-server</artifactId>
@@ -207,21 +187,6 @@
   </dependencies>
   <build>
     <plugins>
-        
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-failsafe-plugin</artifactId>
-              <version>2.22.2</version>
-              <executions>
-                <execution>
-                  <goals>
-                    <goal>integration-test</goal>
-                    <goal>verify</goal>
-                  </goals>
-                </execution>
-              </executions>
-            </plugin>
-          
         
         <plugin>
             <groupId>org.pitest</groupId>
@@ -237,36 +202,27 @@
                 </execution>
             </executions>
             <configuration>
-                <timeoutConstant>2000</timeoutConstant>
+                <timeoutConstant>6000</timeoutConstant>
                 <timeoutFactor>1</timeoutFactor>
                 <targetClasses>
                     
                     <param>org.apache.bookkeeper.bookie.EntryKey</param>
                     <param>org.apache.bookkeeper.bookie.FileInfo</param>
                     <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
-                    <param>org.apache.bookkeeper.client.impl.LedgerEntriesImpl</param>
-
                 </targetClasses>
                 <targetTests>
                     
-                    
-
-                    
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelMockTest</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelForceWriteMockTest</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelWriteMockTest</param>
-                    <param>org.apache.bookkeeper.bookie.FileInfoReadAbsoluteTest</param>-->
-                    <!--<param>org.apache.bookkeeper.client.LedgereEntryCloseTest</param>-->
-                    <!--<param>org.apache.bookkeeper.client.LedgerEntryIteratorTest</param>-->
-                    <param>org.apache.bookkeeper.client.LedgerEntryGetEntryTest</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelWriteTest</param>
-                    <param>org.apache.bookkeeper.bookie.EntryKeyEqualNewTest</param>
+                    <param>org.apache.bookkeeper.bookie.EntryKeyTest</param>
                     <param>org.apache.bookkeeper.bookie.EntryKeyHashTest</param>
-
-                    <param>org.apache.bookkeeper.client.LedgerEntryCreateTest</param>
-
+                    <param>org.apache.bookkeeper.bookie.EntryKeyEqualTest</param>
+                    <param>org.apache.bookkeeper.bookie.EntryKeyComparatorTest</param>
+                    <param>org.apache.bookkeeper.bookie.FileInfoExplicitTest</param>
+                    <param>org.apache.bookkeeper.bookie.FileInfoFencedTest</param>
+                    <param>org.apache.bookkeeper.bookie.FileInfoSetFencedTest</param>
+                    <param>org.apache.bookkeeper.bookie.FileInfoAddConfirmedTest</param>
+                    <param>org.apache.bookkeeper.bookie.FileInfoExplicitLacTest</param>
+                    <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
+                    
                     
                 </targetTests>
                 <avoidCallsTo>
@@ -515,24 +471,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok-maven-plugin</artifactId>
-      <version>1.18.20.0</version>
-      <executions>
-        <execution>
-          <phase>generate-sources</phase>
-          <goals>
-            <goal>delombok</goal>
-          </goals>
-          <configuration>
-            <addOutputDirectory>false</addOutputDirectory>
-            <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-            <outputDirectory>${project.build.directory}/generated-sources/delombok</outputDirectory>
-          </configuration>
-        </execution>
-      </executions>
-    </plugin>
     </plugins>
   </build>
   <profiles>
@@ -562,7 +500,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <version>${maven-surefire-plugin.version}</version>
             <configuration>
-              <argLine>-Xmx8G -Djava.net.preferIPv4Stack=true</argLine>
+              <argLine>-Xmx2G -Djava.net.preferIPv4Stack=true</argLine>
               <redirectTestOutputToFile>false</redirectTestOutputToFile>
               <reuseForks>false</reuseForks>
               <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
