@@ -59,7 +59,7 @@ jobs:
         with:
           name: Jacoco and Pit Reports
           path: |
-            bookkeeper-server/target/site/jacoco/index.html
+            bookkeeper-server/target/site/jacoco
             bookkeeper-server/target/pit-reports
 
       
