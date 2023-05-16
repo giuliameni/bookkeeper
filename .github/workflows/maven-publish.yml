@@ -61,6 +61,9 @@ jobs:
           path: |
             bookkeeper-server/target/site/jacoco
             bookkeeper-server/target/pit-reports
+            
+      - name: Ba-dua coverage
+        run: mvn verify -P ba-dua-coverage
 
       
 
