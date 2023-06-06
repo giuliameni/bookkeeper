@@ -49,7 +49,7 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name: Set directory permissions
-        run: chmod +x home/runner/work/bookkeeper-1/bookkeeper-1/dfc/generate-report.sh
+        run: chmod +x dfc/generate-report.sh
       - name: ba-dua
 
         run: mvn verify -DforkCount=0 -Pba-dua-coverage
