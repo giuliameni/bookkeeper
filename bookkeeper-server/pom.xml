@@ -583,7 +583,7 @@
           </activation>
           <properties>
             <!-- Use a stable version instead of SNAPSHOT one -->
-            <argLine>-javaagent:../dfc/ba-dua-agent-rt-0.2.0-all.jar -Doutput.file=target/badua.ser</argLine>
+            <argLine>-javaagent:/home/runner/work/bookkeeper-1/bookkeeper-1/dfc/generate-report.sh/ba-dua-agent-rt-0.6.0-all.jar -Doutput.file=target/badua.ser</argLine>
           </properties>
           <!-- Needed for generate the report -->
           <build>
@@ -603,7 +603,7 @@
                     <phase>verify</phase>
                     <configuration>
                       <workingDirectory>${project.basedir}</workingDirectory>
-                      <executable>${project.basedir}/../dfc/generate-report.sh</executable>
+                      <executable>/home/runner/work/bookkeeper-1/bookkeeper-1/dfc/generate-report.sh</executable>
                     </configuration>
                   </execution>
                 </executions>
