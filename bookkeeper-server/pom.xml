@@ -14,6 +14,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -212,7 +213,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-failsafe-plugin</artifactId>
-              <version>2.22.0</version>
+              <version>2.22.2</version>
               <executions>
                 <execution>
                   <goals>
@@ -223,9 +224,77 @@
               </executions>
             </plugin>
           
-          
-
+        
         <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.4.3</version>
+            <executions>
+                <execution>
+                    <id>pit-report</id>
+                    <phase>test</phase>
+                    <goals>
+                        <goal>mutationCoverage</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <timeoutConstant>2000</timeoutConstant>
+                <timeoutFactor>1</timeoutFactor>
+                <targetClasses>
+                    
+                    <param>org.apache.bookkeeper.bookie.EntryKey</param>
+                    <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
+                    <param>org.apache.bookkeeper.client.impl.LedgerEntriesImpl</param>
+
+                </targetClasses>
+                <targetTests>
+                    
+                    
+
+                    
+                    <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
+                    <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
+                    
+                    
+                    <param>org.apache.bookkeeper.client.LedgerEntryGetEntryTest</param>
+                    <param>org.apache.bookkeeper.client.LedgerEntryCreateTest</param>
+
+                    
+                    <param>org.apache.bookkeeper.bookie.EntryKeyEqualNewTest</param>
+                    <param>org.apache.bookkeeper.bookie.EntryKeyHashTest</param>
+
+
+                    
+                </targetTests>
+                <avoidCallsTo>
+                    <avoidCallsTo>java.util.logging</avoidCallsTo>
+                    <avoidCallsTo>org.apache.log4j</avoidCallsTo>
+                    <avoidCallsTo>org.slf4j</avoidCallsTo>
+                    <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
+                </avoidCallsTo>
+            </configuration>
+        </plugin>
+        <plugin>
+              <groupId>org.jacoco</groupId>
+              <artifactId>jacoco-maven-plugin</artifactId>
+              <version>0.8.7</version>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>prepare-agent</goal>
+                  </goals>
+                </execution>
+                <execution>
+                  <id>report</id>
+                  <phase>test</phase>
+                  <goals>
+                    <goal>report</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+      <plugin>
         <!-- for mini-kdc -->
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
@@ -465,95 +534,8 @@
     </plugins>
   </build>
   <profiles>
-      <profile>
-            <id>jacoco</id>
-            <build>
-                <plugins>
-      <plugin>
-          
+   
 
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.7</version>
-        
-            <executions>
-              <execution>
-                <goals>
-                  <goal>prepare-agent</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>report</id>
-                <phase>test</phase>
-                <goals>
-                  <goal>report</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-      </plugins>
-          </build>
-      </profile>
-        
-        <profile>
-              <id>pit-test</id>
-              <build>
-                  <plugins>
-      <plugin>
-          
-          <groupId>org.pitest</groupId>
-          <artifactId>pitest-maven</artifactId>
-          <version>1.4.3</version>
-          <executions>
-              <execution>
-                  <id>pit-report</id>
-                  <phase>test</phase>
-                  <goals>
-                      <goal>mutationCoverage</goal>
-                  </goals>
-              </execution>
-          </executions>
-          <configuration>
-              <timeoutConstant>2000</timeoutConstant>
-              <timeoutFactor>1</timeoutFactor>
-              <targetClasses>
-                  
-                  <param>org.apache.bookkeeper.bookie.EntryKey</param>
-                  <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
-                  <param>org.apache.bookkeeper.client.impl.LedgerEntriesImpl</param>
-
-              </targetClasses>
-              <targetTests>
-                  
-                  
-
-                  
-                  <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
-                  <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
-                  
-                  
-                  <param>org.apache.bookkeeper.client.LedgerEntryGetEntryTest</param>
-                  <param>org.apache.bookkeeper.client.LedgerEntryCreateTest</param>
-
-                  
-                  <param>org.apache.bookkeeper.bookie.EntryKeyEqualNewTest</param>
-                  <param>org.apache.bookkeeper.bookie.EntryKeyHashTest</param>
-
-
-                  
-              </targetTests>
-              <avoidCallsTo>
-                  <avoidCallsTo>java.util.logging</avoidCallsTo>
-                  <avoidCallsTo>org.apache.log4j</avoidCallsTo>
-                  <avoidCallsTo>org.slf4j</avoidCallsTo>
-                  <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
-              </avoidCallsTo>
-          </configuration>
-      </plugin>
-      </plugins>
-      </build>
-      </profile>
-      
     <profile>
       <id>twitter-science-provider</id>
       <dependencies>
@@ -578,14 +560,13 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.0.0-M5</version>
+            <version>${maven-surefire-plugin.version}</version>
             <configuration>
                 <argLine>
                         -Xmx8G -Djava.net.preferIPv4Stack=true
                         
                 </argLine>
                 
-
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
               <reuseForks>true</reuseForks>
               <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
@@ -596,30 +577,42 @@
       </build>
     </profile>
     <profile>
-                    <id>data-flow-test</id>
-                    <build>
-                        <plugins>
-                            <plugin>
-                                <groupId>org.apache.maven.plugins</groupId>
-                                <artifactId>maven-surefire-plugin</artifactId>
-                                <executions>
-                                    <execution>
-                                        <goals>
-                                            <goal>test</goal>
-                                        </goals>
-                                    </execution>
-                                </executions>
-                                <configuration>
-                                    <argLine>
-                                        -javaagent:dfc/ba-dua-agent-rt-0.2.0-all.jar
-                                        
-                                    </argLine>
-                                </configuration>
-                            </plugin>
-                        </plugins>
-                    </build>
-                </profile>
-<profile>
+          <id>ba-dua-coverage</id>
+          <activation>
+            <activeByDefault>false</activeByDefault>
+          </activation>
+          <properties>
+            <!-- Use a stable version instead of SNAPSHOT one -->
+            <argLine>-javaagent:dfc/generate-report.sh/ba-dua-agent-rt-0.2.0-all.jar -Doutput.file=target/badua.ser</argLine>
+          </properties>
+          <!-- Needed for generate the report -->
+          <build>
+            <plugins>
+
+              <!-- Generate report in xml format -->
+              <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <executions>
+                  <execution>
+                    <id>Generate Ba-Dua report</id>
+                    <goals>
+                      <goal>exec</goal>
+                    </goals>
+                    <phase>verify</phase>
+                    <configuration>
+                      <workingDirectory>${project.basedir}</workingDirectory>
+                      <executable>dfc/generate-report.sh</executable>
+                    </configuration>
+                  </execution>
+                </executions>
+              </plugin>
+
+            </plugins>
+          </build>
+        </profile>
+    <profile>
       <id>dev-debug</id>
       <build>
           <plugins>
@@ -633,21 +626,11 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
-              <version>3.0.0-M5</version>
-              <executions>
-              <execution>
-                  <goals>
-                      <goal>test</goal>
-                  </goals>
-              </execution>
-              </executions>
+              <version>${maven-surefire-plugin.version}</version>
               <configuration>
-                <argLine>-Xmx2G -Djava.net.preferIPv4Stack=true -Dbookkeeper.root.logger=DEBUG,CONSOLE
-                         -javaagent:/Users/giuliamenichini/Documents/bookkeeper-1/dfc/ba-dua-agent-rt-0.6.0-all.jar
-                         -Xbootclasspath/p:/Users/giuliamenichini/Documents/bookkeeper-1/dfc/ba-dua-agent-rt-0.6.0-all.jar </argLine>
+                <argLine>-Xmx2G -Djava.net.preferIPv4Stack=true -Dbookkeeper.root.logger=DEBUG,CONSOLE</argLine>
                 <redirectTestOutputToFile>false</redirectTestOutputToFile>
                 <reuseForks>false</reuseForks>
-
                 <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
                 <trimStackTrace>false</trimStackTrace>
               </configuration>
