@@ -50,7 +50,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build 
 
-        run: mvn test -Pba-dua-coverage
+        run: mvn test -Pdata-flow-test
       
 
       - name: Save Jacoco and Pit Reports
