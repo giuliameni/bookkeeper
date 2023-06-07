@@ -16,7 +16,7 @@ jobs:
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
-          java-version: 11
+          java-version: 8
           distribution: 'zulu' # Alternative distribution options are available.
       - name: Modify Maven settings.xml
         run: |
@@ -48,7 +48,10 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      
+      - name: Build 
+
+        run: mvn test
+      - name: Build and analyze
       - name: ba-dua coverage
 
         run: java -jar dfc/ba-dua-cli-0.2.0-all.jar report -input bookkeeper-server/badua.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
