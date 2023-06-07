@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v3
  
         with:
-          name: Jacoco and Pit Reports
+          name: ba-dua report
           path: |
             bookkeeper-server/badua.xml
 
