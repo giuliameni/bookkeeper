@@ -64,6 +64,15 @@ jobs:
             bookkeeper-server/target/site/jacoco
             bookkeeper-server/target/pit-reports
             
+      - name: Save ba-dua-report
+        uses: actions/upload-artifact@v3
+ 
+        with:
+          name: Jacoco and Pit Reports
+          path: |
+            bookkeeper-server/badua.xml
+
+            
  
 
       
