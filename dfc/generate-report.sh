@@ -1,6 +1,6 @@
 #!/bin/sh
 
-BADUACLI="../dfc/ba-dua-cli-0.8.1-SNAPSHOT-all.jar"
+BADUACLI="../dfc/ba-dua-cli-0.2.0-all.jar"
 BADUASER="./target/badua.ser"
 CLASSES="./target/classes"
 BADUAXML="./target/badua.xml"
