@@ -52,7 +52,7 @@ jobs:
         run: mvn test -P ba-dua-coverage
       - name: ba-dua coverage
 
-        run: java -jar dfc/ba-dua-cli-0.2.0-all.jar report -input bookkeeper-server/badua.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
+        run: java -jar dfc/ba-dua-cli-0.2.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua1.xml
       
 
       - name: Save Jacoco and Pit Reports
@@ -71,6 +71,14 @@ jobs:
           name: ba-dua report
           path: |
             bookkeeper-server/badua.xml
+            
+     - name: Save ba-dua-report1
+        uses: actions/upload-artifact@v3
+ 
+        with:
+          name: ba-dua report1
+          path: |
+            bookkeeper-server/badua1.xml
 
             
  
