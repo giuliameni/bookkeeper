@@ -598,7 +598,8 @@
           <properties>
             <!-- Use a stable version istead of SNAPSHOT one -->
             <ba-dua.version>0.2.0</ba-dua.version>
-            <argLine>-javaagent:"dfc/ba-dua-agent-rt-${ba-dua.version}-all.jar" -Doutput.file=target/badua.ser</argLine>
+            <argLine>-javaagent:"dfc/ba-dua-agent-rt-0.2.0-all.jar" 
+		     -Doutput.file="target/badua.ser"</argLine>
           </properties>
           <!-- Needed for generate the report -->
           <build>
