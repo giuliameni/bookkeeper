@@ -19,7 +19,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class LedgerEntryGetEntryTest {
+public class LedgerEntriesImplGetEntryTest {
 
     private LedgerEntry mockLedgerEntry1;
     private LedgerEntry mockLedgerEntry2;
@@ -30,7 +30,7 @@ public class LedgerEntryGetEntryTest {
     private long entryId;
     private boolean expectException;
 
-    public LedgerEntryGetEntryTest(long entryId, boolean expectException) {
+    public LedgerEntriesImplGetEntryTest(long entryId, boolean expectException) {
         this.entryId = entryId;
         this.expectException = expectException;
     }
