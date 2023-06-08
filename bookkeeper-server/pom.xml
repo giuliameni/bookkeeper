@@ -614,6 +614,7 @@
         </plugins>
       </build>
     </profile>
+	  <profile>
       <id>dev-debug</id>
       <build>
           <plugins>
