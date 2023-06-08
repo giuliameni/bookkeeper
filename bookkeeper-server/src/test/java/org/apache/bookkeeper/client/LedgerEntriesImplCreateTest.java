@@ -31,7 +31,7 @@ import org.junit.runners.Parameterized;
 
 
 @RunWith(Parameterized.class)
-public class LedgerEntryCreateTest {
+public class LedgerEntriesImplCreateTest {
 
     @Parameters
     public static Collection<Object[]> data() {
@@ -60,7 +60,7 @@ public class LedgerEntryCreateTest {
         entriesClose.add(entry3);
         ledgerEntries = LedgerEntriesImpl.create(entriesClose);
     }
-    public LedgerEntryCreateTest(List<org.apache.bookkeeper.client.api.LedgerEntry> entries, boolean expectException) {
+    public LedgerEntriesImplCreateTest(List<org.apache.bookkeeper.client.api.LedgerEntry> entries, boolean expectException) {
         this.entries = entries;
         this.expectException = expectException;
     }
@@ -81,16 +81,12 @@ public class LedgerEntryCreateTest {
     }
     @Test
     public void testReleaseByteBuf() {
-        // Create a mock LedgerEntry object
     	List<LedgerEntry> entryList = mock(List.class);
 
-    	// Create a new LedgerEntriesImpl object with the mock list
     	LedgerEntriesImpl ledgerEntries = LedgerEntriesImpl.create(entryList);
 
-    	// Call the close method to trigger the releaseByteBuf method
     	ledgerEntries.close();
 
-    	// Verify that the clear method was called on the entry list
     	verify(entryList, times(1)).clear();
     }
 
