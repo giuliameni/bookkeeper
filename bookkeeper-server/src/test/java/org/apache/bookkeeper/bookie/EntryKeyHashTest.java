@@ -25,7 +25,7 @@ public class EntryKeyHashTest {
         	{-1,-1},
                 {0L, 0L},
                 {1L, 1L},
-                {Long.MAX_VALUE, Long.MAX_VALUE} //28
+                {Long.MAX_VALUE, Long.MAX_VALUE} 
         };
     }
 
