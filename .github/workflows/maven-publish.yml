@@ -72,7 +72,7 @@ jobs:
           path: |
             bookkeeper-server/badua.xml
             
-     - name: Save ba-dua-report1
+      - name: Save ba-dua-report1
         uses: actions/upload-artifact@v3
  
         with:
