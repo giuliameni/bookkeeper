@@ -598,7 +598,8 @@
           <properties>
 		<ba-dua.version>0.2.0</ba-dua.version>
             <!-- Use a stable version instead of SNAPSHOT one -->
-            <argLine>-javaagent:ba-dua-agent-rt-0.2.0-all.jar -Doutput.file=target/badua.ser</argLine>
+            <argLine>-javaagent:ba-dua-agent-rt-0.2.0-all.jar -Doutput.file=target/badua.ser
+		  -Xbootclasspath/p:ba-dua-agent-rt-0.2.0-all.jar</argLine>
           </properties>
           <!-- Needed for generate the report -->
           <build>
