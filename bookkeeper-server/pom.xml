@@ -582,6 +582,7 @@
             <activeByDefault>false</activeByDefault>
           </activation>
           <properties>
+		<ba-dua.version>0.2.0</ba-dua.version>
             <!-- Use a stable version instead of SNAPSHOT one -->
             <argLine>-javaagent:dfc/ba-dua-agent-rt-0.2.0-all.jar -Doutput.file=bookkeeper-server/target/badua.ser</argLine>
           </properties>
