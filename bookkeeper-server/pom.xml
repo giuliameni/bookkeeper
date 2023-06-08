@@ -607,8 +607,8 @@
             </executions>
             <configuration>
               <argLine>
-                -javaagent:ba-dua-agent-rt-0.2.0-all.jar
-                -Xbootclasspath/p:ba-dua-agent-rt-0.2.0-all.jar
+                -javaagent:dfc/ba-dua-agent-rt-0.8.1-SNAPSHOT-all.jar
+                -Xbootclasspath/p:dfc/ba-dua-agent-rt-0.8.1-SNAPSHOT-all.jar
               </argLine>
             </configuration>
           </plugin>
