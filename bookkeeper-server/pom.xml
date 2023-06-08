@@ -271,8 +271,8 @@
                     <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
                     
                     
-                    <param>org.apache.bookkeeper.client.LedgerEntryGetEntryTest</param>
-                    <param>org.apache.bookkeeper.client.LedgerEntryCreateTest</param>
+                    <param>org.apache.bookkeeper.client.LedgerEntriesImplGetEntryTest</param>
+                    <param>org.apache.bookkeeper.client.LedgerEntriesImplCreateTest</param>
 
                     
                     <param>org.apache.bookkeeper.bookie.EntryKeyEqualNewTest</param>
