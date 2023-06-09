@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.Assert;
 
 import static org.junit.Assert.assertEquals;
 
@@ -25,7 +26,7 @@ public class EntryKeyHashTest {
         	{-1,-1},
                 {0L, 0L},
                 {1L, 1L},
-                {Long.MAX_VALUE, Long.MAX_VALUE} 
+                {Long.MAX_VALUE, Long.MAX_VALUE} //28
         };
     }
 
@@ -47,6 +48,13 @@ public class EntryKeyHashTest {
     public void testGetLedgerId() {
         EntryKey key = new EntryKey(ledgerId, entryId);
         assertEquals(ledgerId, key.getLedgerId());
+    }
+
+    @Test
+    public void testDefaultConstructor() {
+        EntryKey key = new EntryKey();
+        Assert.assertEquals("Ledger ID should be 0", 0L, key.getLedgerId());
+        Assert.assertEquals("Entry ID should be 0", 0L, key.getEntryId());
     }
 }
 
