@@ -1,4 +1,4 @@
-name: Reports Generations
+name: Reports Generation
 on:
   push:
     branches:
