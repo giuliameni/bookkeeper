@@ -49,9 +49,8 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name : Report jacoco
-        run: mvn test -Pjacoco    
-      - name : Report ba-dua
-        run: mvn test -Pba-dua-coverage
+        run: mvn clean install -Pjacoco -Pba-dua-coverage 
+ 
         
       
       - name: ba-dua coverage
