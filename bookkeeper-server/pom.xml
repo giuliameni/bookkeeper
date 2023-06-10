@@ -405,7 +405,7 @@
             </executions>
             <configuration>
               <argLine>
-                -javaagent:"${ba-dua-dir}/ba-dua-agent-rt-0.6.0-all.jar"
+                -javaagent:"..dfc/ba-dua-agent-rt-0.6.0-all.jar"
               </argLine>
             </configuration>
           </plugin>
