@@ -34,4 +34,12 @@ public class EntryKeyEqualNewTest {
     public void testEquals() {
         assertEquals(expectedResult, entryKey.equals(other));
     }
+    @Test
+    public void testDefaultConstructor() {
+        EntryKey key1 = new EntryKey(1,2);
+        EntryKey key2 = new EntryKey(1,2);
+        EntryKey key3 = new EntryKey(3,4);
+        assertTrue(key1.equals(key2));
+        assertFalse(key1.equals(key3));
+    }
 }
