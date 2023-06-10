@@ -51,14 +51,14 @@
     <url>https://builds.apache.org/job/bookkeeper-master</url>
   </ciManagement>
   <modules>
-    <!--<module>buildtools</module>
+    <module>buildtools</module>
     <module>circe-checksum</module>
     <module>bookkeeper-common</module>
     <module>bookkeeper-common-allocator</module>
     <module>stats</module>
-    <module>bookkeeper-proto</module>-->
+    <module>bookkeeper-proto</module>
     <module>bookkeeper-server</module>
-    <!--<module>bookkeeper-benchmark</module>
+    <module>bookkeeper-benchmark</module>
     <module>bookkeeper-http</module>
     <module>stream</module>
     <module>tools</module>
