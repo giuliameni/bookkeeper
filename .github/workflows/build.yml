@@ -52,7 +52,10 @@ jobs:
       - name: Build and analyze
 
         run: mvn clean install -Pba-dua-coverage
-      - name: ba-dua coverage
+      - name: |
+            chmod 666 dfc/ba-dua-agent-rt-0.6.0.jar
+            ls -l 
+            mvn test -Pba-dua-coverage
 
         run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
       - name: Save Ba-dua  Report
