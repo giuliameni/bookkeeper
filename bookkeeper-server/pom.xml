@@ -328,7 +328,7 @@
             <targetClasses>
                 
                 <param>org.apache.bookkeeper.bookie.EntryKey</param>
-                <param>org.apache.bookkeeper.bookie.storage.ldb.WriteCache</param>
+                <param>org.apache.bookkeeper.bookie.storage.ldb.ReadCache</param>
                 <param>org.apache.bookkeeper.client.impl.LedgerEntriesImpl</param>
 
             </targetClasses>
