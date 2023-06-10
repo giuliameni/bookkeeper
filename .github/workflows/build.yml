@@ -32,4 +32,13 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build and analyze
 
-        run: mvn test 
+        run: mvn test -Pjacoco
+        
+      - name: Save Jacoco  Report
+        uses: actions/upload-artifact@v3
+ 
+        with:
+          name: Jacoco and Pit Reports
+          path: |
+            bookkeeper-server/target/site/jacoco
+
