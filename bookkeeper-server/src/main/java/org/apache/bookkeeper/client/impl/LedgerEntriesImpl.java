@@ -36,7 +36,7 @@ public class LedgerEntriesImpl implements LedgerEntries {
     private List<LedgerEntry> entries;
     private final Recycler.Handle<LedgerEntriesImpl> recyclerHandle;
 
-    private LedgerEntriesImpl(Recycler.Handle<LedgerEntriesImpl> recyclerHandle) {
+    public LedgerEntriesImpl(Recycler.Handle<LedgerEntriesImpl> recyclerHandle) {
         this.recyclerHandle = recyclerHandle;
     }
 
