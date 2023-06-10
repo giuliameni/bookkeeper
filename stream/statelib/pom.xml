@@ -65,12 +65,12 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
     </dependency>
-    <!--<dependency>
+    <dependency>
       <groupId>org.apache.distributedlog</groupId>
       <artifactId>distributedlog-core</artifactId>
       <version>${project.parent.version}</version>
       <classifier>tests</classifier>
-    </dependency>-->
+    </dependency>
 
     <!-- zookeeper -->
     <dependency>
