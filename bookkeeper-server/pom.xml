@@ -405,7 +405,7 @@
             </executions>
             <configuration>
               <argLine>
-                -javaagent:"dfc/ba-dua-agent-rt-0.6.0-all.jar"
+                -javaagent:"bookkeeper-server/dfc/ba-dua-agent-rt-0.6.0-all.jar"
               </argLine>
             </configuration>
           </plugin>
