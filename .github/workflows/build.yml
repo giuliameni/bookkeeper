@@ -51,7 +51,7 @@ jobs:
           
       - name: Build and analyze
 
-        run: mvn test 
+        run: mvn test -Pba-dua-coverage
       - name: ba-dua report
 
         run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
