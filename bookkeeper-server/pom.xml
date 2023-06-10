@@ -474,7 +474,7 @@
         </plugins>
       </build>
     </profile>
-    <!-- test profiles -->
+
     <profile>
       <id>skipBookKeeperServerTests</id>
       <activation>
