@@ -326,7 +326,7 @@
         <version>${reflections.version}</version>
       </dependency>
 
-      <!-- compression libs -->
+      
       <dependency>
         <groupId>net.jpountz.lz4</groupId>
         <artifactId>lz4</artifactId>
