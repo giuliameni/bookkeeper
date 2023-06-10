@@ -34,9 +34,6 @@ jobs:
 
         run: mvn test -Pjacoco
         
-      - name: Build and analyze
-
-        run: mvn test -Ppit-test
         
       - name: Save Jacoco  Report
         uses: actions/upload-artifact@v3
@@ -45,5 +42,5 @@ jobs:
           name: Jacoco and Pit Reports
           path: |
             bookkeeper-server/target/site/jacoco
-            bookkeeper-server/target/pit-report
+            bookkeeper-server/target/pit-reports
 
