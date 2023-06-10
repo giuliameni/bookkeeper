@@ -388,7 +388,6 @@
     </plugins>
   </build>
   <profiles>
-     <profiles>
     <profile>
         <id>ba-dua-coverage</id>
         <build>
