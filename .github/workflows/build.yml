@@ -51,9 +51,7 @@ jobs:
           
       - name: Build and analyze
 
-        run: |
-            cd dfc
-            ls
+        run: chmod +x "dfc/ba-dua-agent-rt-0.6.0.jar"
       - name: ba-dua report
 
         run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
