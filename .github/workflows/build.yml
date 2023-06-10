@@ -46,14 +46,12 @@ jobs:
       - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
-          java-version: 8
+          java-version: 11
           distribution: 'zulu' # Alternative distribution options are available.
           
       - name: Build and analyze
 
-        run: |
-          cd dfc
-          mvn test -Pba-dua-coverage
+        run: mvn test -Pba-dua-coverage
       - name: ba-dua report
 
         run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
