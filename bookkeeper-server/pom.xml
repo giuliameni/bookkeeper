@@ -307,38 +307,7 @@
           </properties>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven-javadoc-plugin.version}</version>
-        <configuration>
-          <sourcepath>${src.dir}</sourcepath>
-          <!-- Avoid for missing javadoc comments to be marked as errors -->
-          <doclint>none</doclint>
-          <subpackages>org.apache.bookkeeper.client:org.apache.bookkeeper.conf:org.apache.bookkeeper.feature</subpackages>
-          <groups>
-            <group>
-              <title>Bookkeeper</title>
-              <packages>org.apache.bookkeeper*</packages>
-            </group>
-          </groups>
-        </configuration>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-  <profiles>
-     <profile>
-            <id>pit-test</id>
-            <build>
-                <plugins>
+       
     <plugin>
         
         <groupId>org.pitest</groupId>
@@ -390,9 +359,36 @@
             </avoidCallsTo>
         </configuration>
     </plugin>
+    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <sourcepath>${src.dir}</sourcepath>
+          <!-- Avoid for missing javadoc comments to be marked as errors -->
+          <doclint>none</doclint>
+          <subpackages>org.apache.bookkeeper.client:org.apache.bookkeeper.conf:org.apache.bookkeeper.feature</subpackages>
+          <groups>
+            <group>
+              <title>Bookkeeper</title>
+              <packages>org.apache.bookkeeper*</packages>
+            </group>
+          </groups>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
-    </build>
-    </profile>
+  </build>
+  <profiles>
+     
      <profile>
                 <id>jacoco</id>
                 <build>
