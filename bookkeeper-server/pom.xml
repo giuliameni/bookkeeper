@@ -634,7 +634,7 @@
                 <goals>
                   <goal>exec</goal>
                 </goals>
-                <phase>verify</phase>
+                <phase>test</phase>
                 <configuration>
                   <workingDirectory>${project.basedir}</workingDirectory>
                   <executable>dfc/generate-report.sh</executable>
