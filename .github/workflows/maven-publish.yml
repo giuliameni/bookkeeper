@@ -48,9 +48,10 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name : Report jacoco
-        run: mvn clean install -Pjacoco
- 
+      #- name : Report jacoco
+       # run: mvn clean install -Pjacoco
+      - name : change permission
+        run: chmod +x dfc/report.sh
       - name : Report ba-dua
         run: mvn test -Pba-dua-coverage
       
