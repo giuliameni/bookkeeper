@@ -625,7 +625,7 @@
       </build>
     </profile>	
 	<profile>
-      <id>ba-dua-reporte</id>
+      <id>ba-dua-report</id>
       <build>
         <plugins>
           <!-- Generate report in xml format -->
