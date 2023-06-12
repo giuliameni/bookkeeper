@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v3
  
         with:
-          name: Jacoco and Pit Reports
+          name: Jacoco, Pit and Ba-dua Reports
           path: |
             bookkeeper-server/target/site/jacoco
             bookkeeper-server/target/pit-reports
