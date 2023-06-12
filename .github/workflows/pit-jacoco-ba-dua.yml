@@ -49,13 +49,14 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       - name : Report jacoco
-        run: mvn clean install -Pjacoco
+        run: mvn test -Pjacoco
+        
+      - name : Report PIT
+        run: mvn test -Ppit-test
       - name : change permission
         run: chmod +x dfc/report.sh
-      - name : ba-dua ser
+      - name : ba-dua report
         run: mvn test -Pba-dua-coverage
-      - name : Report ba-dua
-        run: mvn test -Pba-dua-report
 
 
       - name: Save Jacoco, Pit and Ba-dua Reports
