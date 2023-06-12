@@ -48,20 +48,17 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      #- name : Report jacoco
-       # run: mvn clean install -Pjacoco
+      - name : Report jacoco
+        run: mvn clean install -Pjacoco
       - name : change permission
         run: chmod +x dfc/report.sh
       - name : ba-dua ser
         run: mvn test -Pba-dua-coverage
       - name : Report ba-dua
         run: mvn test -Pba-dua-report
-      - name: ba-dua coverage
 
-        run: java -jar dfc/ba-dua-cli-0.2.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
-      
 
-      - name: Save Jacoco and Pit Reports
+      - name: Save Jacoco, Pit and Ba-dua Reports
         uses: actions/upload-artifact@v3
  
         with:
@@ -69,15 +66,7 @@ jobs:
           path: |
             bookkeeper-server/target/site/jacoco
             bookkeeper-server/target/pit-reports
-            
-      - name: Save ba-dua-report
-        uses: actions/upload-artifact@v3
- 
-        with:
-          name: ba-dua report
-          path: |
-            bookkeeper-server/badua.xml
-
+            bookkeeper-server/target/badua.xml
 
             
  
