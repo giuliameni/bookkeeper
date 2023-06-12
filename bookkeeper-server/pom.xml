@@ -637,7 +637,7 @@
                 <phase>test</phase>
                 <configuration>
                   <workingDirectory>${project.basedir}</workingDirectory>
-                  <executable>dfc/generate-report.sh</executable>
+                  <executable>dfc/report.sh</executable>
                 </configuration>
               </execution>
             </executions>
