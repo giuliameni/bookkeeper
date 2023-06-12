@@ -239,56 +239,7 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-        <plugin>
-            <groupId>org.pitest</groupId>
-            <artifactId>pitest-maven</artifactId>
-            <version>1.4.3</version>
-            <executions>
-                <execution>
-                    <id>pit-report</id>
-                    <phase>test</phase>
-                    <goals>
-                        <goal>mutationCoverage</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <timeoutConstant>2000</timeoutConstant>
-                <timeoutFactor>1</timeoutFactor>
-                <targetClasses>
-                    
-                    <param>org.apache.bookkeeper.bookie.EntryKey</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
-                    <param>org.apache.bookkeeper.client.impl.LedgerEntriesImpl</param>
-
-                </targetClasses>
-                <targetTests>
-                    
-                    
-
-                    
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
-                    <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
-                    
-                    
-                    <param>org.apache.bookkeeper.client.LedgerEntriesImplGetEntryTest</param>
-                    <param>org.apache.bookkeeper.client.LedgerEntriesImplCreateTest</param>
-
-                    
-                    <param>org.apache.bookkeeper.bookie.EntryKeyEqualNewTest</param>
-                    <param>org.apache.bookkeeper.bookie.EntryKeyHashTest</param>
-
-
-                    
-                </targetTests>
-                <avoidCallsTo>
-                    <avoidCallsTo>java.util.logging</avoidCallsTo>
-                    <avoidCallsTo>org.apache.log4j</avoidCallsTo>
-                    <avoidCallsTo>org.slf4j</avoidCallsTo>
-                    <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
-                </avoidCallsTo>
-            </configuration>
-        </plugin>
+        
         
       <plugin>
         <!-- for mini-kdc -->
@@ -530,6 +481,64 @@
     </plugins>
   </build>
   <profiles>
+	  <profile>
+            <id>pit-test</id>
+            <build>
+                <plugins>
+	  <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.4.3</version>
+            <executions>
+                <execution>
+                    <id>pit-report</id>
+                    <phase>test</phase>
+                    <goals>
+                        <goal>mutationCoverage</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <timeoutConstant>2000</timeoutConstant>
+                <timeoutFactor>1</timeoutFactor>
+                <targetClasses>
+                    
+                    <param>org.apache.bookkeeper.bookie.EntryKey</param>
+                    <param>org.apache.bookkeeper.bookie.BufferedChannel</param>
+                    <param>org.apache.bookkeeper.client.impl.LedgerEntriesImpl</param>
+
+                </targetClasses>
+                <targetTests>
+                    
+                    
+
+                    
+                    <param>org.apache.bookkeeper.bookie.BufferedChannelTest</param>
+                    <param>org.apache.bookkeeper.bookie.BufferedChannelReadTest</param>
+                    
+                    
+                    <param>org.apache.bookkeeper.client.LedgerEntriesImplGetEntryTest</param>
+                    <param>org.apache.bookkeeper.client.LedgerEntriesImplCreateTest</param>
+
+                    
+                    <param>org.apache.bookkeeper.bookie.EntryKeyEqualNewTest</param>
+                    <param>org.apache.bookkeeper.bookie.EntryKeyHashTest</param>
+
+
+                    
+                </targetTests>
+                <avoidCallsTo>
+                    <avoidCallsTo>java.util.logging</avoidCallsTo>
+                    <avoidCallsTo>org.apache.log4j</avoidCallsTo>
+                    <avoidCallsTo>org.slf4j</avoidCallsTo>
+                    <avoidCallsTo>org.apache.commons.logging</avoidCallsTo>
+                </avoidCallsTo>
+            </configuration>
+        </plugin>
+	 </plugins>
+          </build>
+      </profile>  
+	  
    <profile>
             <id>jacoco</id>
             <build>
