@@ -621,8 +621,13 @@
               </argLine>
             </configuration>
           </plugin>
-		
-
+	</plugins>
+      </build>
+    </profile>	
+	<profile>
+      <id>ba-dua-reporte</id>
+      <build>
+        <plugins>
           <!-- Generate report in xml format -->
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
