@@ -52,9 +52,10 @@ jobs:
        # run: mvn clean install -Pjacoco
       - name : change permission
         run: chmod +x dfc/report.sh
-      - name : Report ba-dua
+      - name : ba-dua ser
         run: mvn test -Pba-dua-coverage
-      
+      - name : Report ba-dua
+        run: mvn test -Pba-dua-report
       - name: ba-dua coverage
 
         run: java -jar dfc/ba-dua-cli-0.2.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
