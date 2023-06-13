@@ -51,9 +51,14 @@ jobs:
           java-version: 8
           distribution: 'zulu' # Alternative distribution options are available.
           
-      - name: Build and analyze
+          
+          
+      - name: ba-dua report
+        run: mvn test -Pba-dua-coverage
+          
+     # - name: Build and analyze
 
-        run: mvn test -DargLine="-javaagent:dfc/ba-dua-agent-rt-0.6.0-all.jar"
+     #   run: mvn test -DargLine="-javaagent:dfc/ba-dua-agent-rt-0.6.0-all.jar"
 
       - name: ba-dua report
 
