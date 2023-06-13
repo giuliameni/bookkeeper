@@ -58,7 +58,6 @@ jobs:
       - name : ba-dua report
         run: mvn test -Pba-dua-coverage
 
-
       - name: Save Jacoco, Pit and Ba-dua Reports
         uses: actions/upload-artifact@v3
  
