@@ -30,21 +30,13 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-    #  - name: jacoco-report
+      - name: jacoco-report
 
-       # run: mvn test -Pjacoco
-    #  - name: pit-report
+        run: mvn test -Pjacoco
+      - name: pit-report
 
-     #   run: mvn test -Ppit-test
+        run: mvn test -Ppit-test
         
-    #  - name: Save Jacoco  Report
-    #    uses: actions/upload-artifact@v3
- #
-#        with:
-  #        name: Jacoco and Pit Reports
-     #     path: |
-      #      bookkeeper-server/target/site/jacoco
-       #     bookkeeper-server/target/pit-reports
       - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
@@ -57,17 +49,14 @@ jobs:
       - name: ba-dua report
         run: mvn test -Pba-dua-coverage
           
-     # - name: Build and analyze
-
-     #   run: mvn test -DargLine="-javaagent:dfc/ba-dua-agent-rt-0.6.0-all.jar"
-
-      #- name: ba-dua report
-
-       # run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
-      - name: Save Ba-dua  Report
+    
+      - name: Save Jacoco, PIT and Ba-dua Reports
         uses: actions/upload-artifact@v3
  
         with:
           name: ba-dua Report
           path: |
             bookkeeper-server/target/badua.xml
+            bookkeeper-server/target/site/jacoco
+            bookkeeper-server/target/pit-reports
+
