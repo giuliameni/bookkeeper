@@ -372,7 +372,7 @@
                 </goals>
                 <phase>test</phase>
                 <configuration>
-                  <workingDirectory>bookkeeper-server</workingDirectory>
+                  <!--<workingDirectory>bookkeeper-server</workingDirectory>-->
                   <executable>dfc/report.sh</executable>
                 </configuration>
               </execution>
