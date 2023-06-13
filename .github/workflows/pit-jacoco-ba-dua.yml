@@ -53,7 +53,7 @@ jobs:
           
           
       - name: change permission
-         chmod +x bookkeeper-server/dfc/report.sh
+        run: chmod +x bookkeeper-server/dfc/report.sh
       - name: ba-dua report
         run: mvn test -Pba-dua-coverage
           
