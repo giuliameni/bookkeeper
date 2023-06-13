@@ -60,13 +60,13 @@ jobs:
 
      #   run: mvn test -DargLine="-javaagent:dfc/ba-dua-agent-rt-0.6.0-all.jar"
 
-      - name: ba-dua report
+      #- name: ba-dua report
 
-        run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
+       # run: java -jar jar/ba-dua-cli-0.6.0-all.jar report -input bookkeeper-server/coverage.ser -classes bookkeeper-server/target/classes -show-classes -show-methods -xml bookkeeper-server/badua.xml
       - name: Save Ba-dua  Report
         uses: actions/upload-artifact@v3
  
         with:
           name: ba-dua Report
           path: |
-            bookkeeper-server/badua.xml
+            bookkeeper-server/target/badua.xml
