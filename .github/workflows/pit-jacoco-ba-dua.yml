@@ -52,7 +52,8 @@ jobs:
           distribution: 'zulu' # Alternative distribution options are available.
           
           
-          
+      - name: change permission
+         chmod +x bookkeeper-server/dfc/report.sh
       - name: ba-dua report
         run: mvn test -Pba-dua-coverage
           
